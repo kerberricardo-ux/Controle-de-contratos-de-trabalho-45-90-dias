@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Controle de Contratos - Quântica</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --success: #27ae60;
+            --warning: #f1c40f;
+            --danger: #e74c3c;
+            --expired: #2c3e50;
+            --light: #f8f9fa;
+            --border: #dee2e6;
+        }
+
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: #e9ecef; margin: 0; padding: 20px; color: var(--primary); }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        header { 
+            background: white; padding: 20px; border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .stats-bar { display: flex; gap: 15px; margin-bottom: 20px; }
+        .stat-card { 
+            background: white; padding: 15px; border-radius: 8px; flex: 1;
+            text-align: center; border-bottom: 4px solid var(--primary);
+        }
+
+        /* Abas */
+        .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
+        .tab-btn { 
+            padding: 10px 25px; border: none; background: #ddd; 
+            cursor: pointer; border-radius: 5px 5px 0 0; font-weight: 600;
+        }
+        .tab-btn.active { background: white; border-bottom: 2px solid var(--success); }
+
+        /* Formulário */
+        .form-section { 
+            background: white; padding: 20px; border-radius: 8px; 
+            margin-bottom: 20px; display: none; border: 1px solid var(--border);
+        }
+        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; }
+        
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .btn-add { background: var(--success); color: white; }
+        .btn-pdf { background: var(--primary); color: white; }
+        .btn-save { background: var(--success); color: white; margin-top: 15px; }
+        .btn-cancel { background: var(--danger); color: white; }
+
+        /* Grid de Cards */
+        .turno-section { margin-top: 30px; }
+        .turno-title { border-left: 5px solid var(--primary); padding-left: 10px; margin-bottom: 15px; }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+
+        .card { 
+            background: white; border-radius: 8px; padding: 15px; 
+            border-top: 8px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .card.status-green { border-top-color: var(--success); }
+        .card.status-yellow { border-top-color: var(--warning); }
+        .card.status-red { border-top-color: var(--danger); }
+        .card.status-black { border-top-color: var(--expired); background: #f1f1f1; }
+
+        .card h3 { margin: 0 0 10px 0; font-size: 1.1rem; }
+        .card p { margin: 5px 0; font-size: 0.9rem; color: #666; }
+        .card .badge { 
+            display: inline-block; padding: 3px 8px; border-radius: 12px; 
+            font-size: 0.75rem; font-weight: bold; background: #eee;
+        }
+
+        .actions { display: flex; gap: 5px; margin-top: 15px; flex-wrap: wrap; }
+        .btn-small { padding: 5px 10px; font-size: 0.8rem; border-radius: 3px; border: none; cursor: pointer; }
+        .btn-edit { background: #3498db; color: white; }
+        .btn-del { background: #e74c3c; color: white; }
+        .btn-pass { background: #27ae60; color: white; }
+        .btn-fail { background: #e67e22; color: white; }
+
+        /* Estilo para Abas Inativas */
+        .history-table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
+        .history-table th, .history-table td { padding: 12px; border: 1px solid var(--border); text-align: left; }
+        .history-table th { background: var(--light); }
+
+        .search-box { margin-bottom: 15px; }
+        .search-box input { max-width: 400px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1>Controle de Contratos 45/90</h1>
+            <p>Quântica Sistemas de Segurança</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-add" onclick="toggleForm()">+ Novo Cadastro</button>
+            <button class="btn btn-pdf" onclick="gerarPDF()">📄 Gerar Relatório PDF</button>
+        </div>
+    </header>
+
+    <div class="stats-bar" id="statsBar">
+        </div>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Buscar por nome ou matrícula..." onkeyup="renderizarTudo()">
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('ativos', this)">Ativos</button>
+        <button class="tab-btn" onclick="switchTab('aprovados', this)">Aprovados</button>
+        <button class="tab-btn" onclick="switchTab('reprovados', this)">Reprovados</button>
+    </div>
+
+    <section id="formSection" class="form-section">
+        <h2 id="formTitle">Cadastrar Funcionário</h2>
+        <input type="hidden" id="editIndex">
+        <div class="grid-form">
+            <div>
+                <label>Nome Completo</label>
+                <input type="text" id="nome" required>
+            </div>
+            <div>
+                <label>Matrícula</label>
+                <input type="number" id="matricula" required>
+            </div>
+            <div>
+                <label>Turno</label>
+                <select id="turno">
+                    <option value="Manhã">Manhã</option>
+                    <option value="Tarde">Tarde</option>
+                    <option value="Noite">Noite</option>
+                </select>
+            </div>
+            <div>
+                <label>Posto</label>
+                <input type="text" id="posto" required>
+            </div>
+            <div>
+                <label>Início do Contrato</label>
+                <input type="date" id="dataInicio" required>
+            </div>
+            <div>
+                <label>Vencimento (Fim)</label>
+                <input type="date" id="dataFim" required>
+            </div>
+        </div>
+        <button class="btn btn-save" onclick="salvarFuncionario()">Salvar Registro</button>
+        <button class="btn btn-cancel" onclick="toggleForm()">Cancelar</button>
+    </section>
+
+    <main id="mainContent">
+        </main>
+</div>
+
+<script>
+    // Estado da Aplicação
+    let db = JSON.parse(localStorage.getItem('quantica_db')) || {
+        funcionarios: [],
+        aprovados: [],
+        reprovados: []
+    };
+
+    let currentTab = 'ativos';
+
+    // Salvar no LocalStorage
+    function saveDB() {
+        localStorage.setItem('quantica_db', JSON.stringify(db));
+        renderizarTudo();
+    }
+
+    function toggleForm() {
+        const fs = document.getElementById('formSection');
+        fs.style.display = fs.style.display === 'block' ? 'none' : 'block';
+        if(fs.style.display === 'none') limparForm();
+    }
+
+    function limparForm() {
+        document.getElementById('nome').value = '';
+        document.getElementById('matricula').value = '';
+        document.getElementById('posto').value = '';
+        document.getElementById('dataInicio').value = '';
+        document.getElementById('dataFim').value = '';
+        document.getElementById('editIndex').value = '';
+        document.getElementById('formTitle').innerText = 'Cadastrar Funcionário';
+    }
+
+    function calcularDiasRestantes(dataFim) {
+        const hoje = new Date();
+        const fim = new Date(dataFim);
+        const diff = fim - hoje;
+        return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    }
+
+    function getStatusInfo(dias) {
+        if (dias < 0) return { class: 'status-black', label: 'Vencido' };
+        if (dias < 7) return { class: 'status-red', label: 'Urgente' };
+        if (dias <= 15) return { class: 'status-yellow', label: 'Atenção' };
+        return { class: 'status-green', label: 'Regular' };
+    }
+
+    function salvarFuncionario() {
+        const func = {
+            nome: document.getElementById('nome').value,
+            matricula: document.getElementById('matricula').value,
+            turno: document.getElementById('turno').value,
+            posto: document.getElementById('posto').value,
+            dataInicio: document.getElementById('dataInicio').value,
+            dataFim: document.getElementById('dataFim').value,
+            id: Date.now()
+        };
+
+        if(!func.nome || !func.dataFim) return alert("Preencha os campos obrigatórios.");
+
+        const editIdx = document.getElementById('editIndex').value;
+        if(editIdx !== "") {
+            db.funcionarios[editIdx] = func;
+        } else {
+            db.funcionarios.push(func);
+        }
+
+        saveDB();
+        toggleForm();
+    }
+
+    function editarFuncionario(index) {
+        const f = db.funcionarios[index];
+        document.getElementById('nome').value = f.nome;
+        document.getElementById('matricula').value = f.matricula;
+        document.getElementById('turno').value = f.turno;
+        document.getElementById('posto').value = f.posto;
+        document.getElementById('dataInicio').value = f.dataInicio;
+        document.getElementById('dataFim').value = f.dataFim;
+        document.getElementById('editIndex').value = index;
+        document.getElementById('formTitle').innerText = 'Editando Funcionário';
+        document.getElementById('formSection').style.display = 'block';
+        window.scrollTo(0,0);
+    }
+
+    function excluirFuncionario(index, tipo = 'ativos') {
+        if(confirm("Deseja realmente excluir este registro de forma permanente?")) {
+            if(tipo === 'ativos') db.funcionarios.splice(index, 1);
+            if(tipo === 'aprovados') db.aprovados.splice(index, 1);
+            if(tipo === 'reprovados') db.reprovados.splice(index, 1);
+            saveDB();
+        }
+    }
+
+    function avaliar(index, status) {
+        const func = db.funcionarios.splice(index, 1)[0];
+        func.dataAvaliacao = new Date().toLocaleDateString('pt-BR');
+        if(status === 'passou') db.aprovados.push(func);
+        else db.reprovados.push(func);
+        saveDB();
+    }
+
+    function switchTab(tab, btn) {
+        currentTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderizarTudo();
+    }
+
+    function renderizarTudo() {
+        const container = document.getElementById('mainContent');
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        container.innerHTML = '';
+
+        if(currentTab === 'ativos') {
+            const turnos = ['Manhã', 'Tarde', 'Noite'];
+            turnos.forEach(turno => {
+                const filtrados = db.funcionarios.filter(f => 
+                    f.turno === turno && 
+                    (f.nome.toLowerCase().includes(search) || f.matricula.includes(search))
+                );
+
+                let html = `
+                    <section class="turno-section">
+                        <h2 class="turno-title">${turno} (${filtrados.length})</h2>
+                        <div class="cards-grid">
+                `;
+
+                filtrados.forEach((f, idx) => {
+                    const dias = calcularDiasRestantes(f.dataFim);
+                    const status = getStatusInfo(dias);
+                    const originalIdx = db.funcionarios.findIndex(item => item.id === f.id);
+
+                    html += `
+                        <div class="card ${status.class}">
+                            <h3>${f.nome}</h3>
+                            <p><strong>Matrícula:</strong> ${f.matricula}</p>
+                            <p><strong>Posto:</strong> ${f.posto}</p>
+                            <p><strong>Vencimento:</strong> ${f.dataFim.split('-').reverse().join('/')}</p>
+                            <p><strong>Restam:</strong> ${dias} dias</p>
+                            <span class="badge">${status.label}</span>
+                            <div class="actions">
+                                <button class="btn-small btn-edit" onclick="editarFuncionario(${originalIdx})">Editar</button>
+                                <button class="btn-small btn-pass" onclick="avaliar(${originalIdx}, 'passou')">✔ Passou</button>
+                                <button class="btn-small btn-fail" onclick="avaliar(${originalIdx}, 'falhou')">✖ Reprovou</button>
+                                <button class="btn-small btn-del" onclick="excluirFuncionario(${originalIdx})">Excluir</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div></section>`;
+                container.innerHTML += html;
+            });
+        } else {
+            // Render Histórico (Aprovados / Reprovados)
+            const lista = currentTab === 'aprovados' ? db.aprovados : db.reprovados;
+            let html = `
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Matrícula</th>
+                            <th>Posto</th>
+                            <th>Data Avaliação</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            lista.forEach((f, idx) => {
+                if(f.nome.toLowerCase().includes(search) || f.matricula.includes(search)) {
+                    html += `
+                        <tr>
+                            <td>${f.nome}</td>
+                            <td>${f.matricula}</td>
+                            <td>${f.posto}</td>
+                            <td>${f.dataAvaliacao}</td>
+                            <td><button class="btn-small btn-del" onclick="excluirFuncionario(${idx}, '${currentTab}')">Remover</button></td>
+                        </tr>
+                    `;
+                }
+            });
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+        renderStats();
+    }
+
+    function renderStats() {
+        const total = db.funcionarios.length;
+        const vencidos = db.funcionarios.filter(f => calcularDiasRestantes(f.dataFim) < 0).length;
+        document.getElementById('statsBar').innerHTML = `
+            <div class="stat-card"><strong>Total Ativos</strong><br>${total}</div>
+            <div class="stat-card" style="border-color: var(--danger)"><strong>Críticos/Vencidos</strong><br>${vencidos}</div>
+            <div class="stat-card" style="border-color: var(--success)"><strong>Aprovados</strong><br>${db.aprovados.length}</div>
+        `;
+    }
+
+    // RELATÓRIO PDF A4 - PADRÃO CORPORATIVO
+    function gerarPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const totalPagesExp = "{total_pages_count_string}";
+
+        const rows = db.funcionarios.map(f => [
+            f.nome,
+            f.matricula,
+            f.turno,
+            f.posto,
+            f.dataInicio.split('-').reverse().join('/'),
+            f.dataFim.split('-').reverse().join('/'),
+            calcularDiasRestantes(f.dataFim)
+        ]);
+
+        doc.autoTable({
+            head: [['Nome', 'Matr.', 'Turno', 'Posto', 'Início', 'Fim', 'Dias']],
+            body: rows,
+            startY: 35,
+            theme: 'striped',
+            headStyles: { fillStyle: '#2c3e50', textColor: 255 },
+            didDrawPage: function (data) {
+                // Cabeçalho
+                doc.setFontSize(14);
+                doc.setTextColor(40);
+                doc.text("RELATÓRIO DE CONTRATOS DE TRABALHO", data.settings.margin.left, 20);
+                
+                doc.setFontSize(10);
+                const dateStr = new Date().toLocaleString('pt-BR');
+                doc.text(`Gerado em: ${dateStr}`, data.settings.margin.left, 26);
+                doc.line(data.settings.margin.left, 28, 210 - data.settings.margin.right, 28);
+
+                // Rodapé fixo
+                let str = "Página " + doc.internal.getNumberOfPages();
+                if (typeof doc.putTotalPages === 'function') {
+                    str = str + " de " + totalPagesExp;
+                }
+                doc.setFontSize(8);
+                const pageSize = doc.internal.pageSize;
+                const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+                
+                doc.text("Quantica Sistemas de Seguranca Inteligente Ltda - CNPJ 30.621.295/0001-84", data.settings.margin.left, pageHeight - 10);
+                doc.text(str, 180, pageHeight - 10);
+            },
+            margin: { top: 35, bottom: 20 }
+        });
+
+        if (typeof doc.putTotalPages === 'function') {
+            doc.putTotalPages(totalPagesExp);
+        }
+
+        doc.save(`Relatorio_Contratos_${new Date().getTime()}.pdf`);
+    }
+
+    // Inicialização
+    renderizarTudo();
+</script>
+
+</body>
+</html>
