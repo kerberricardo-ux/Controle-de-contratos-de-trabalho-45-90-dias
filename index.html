@@ -42,6 +42,7 @@
         .btn-add { background: var(--success); color: white; }
         .btn-pdf { background: var(--primary); color: white; }
         .btn-save { background: var(--success); color: white; margin-top: 15px; width: 100%; }
+        .btn-reg { background: #34495e; color: white; margin-top: 10px; width: 100%; }
         .btn-cancel { background: var(--danger); color: white; }
         .btn-logout { background: #666; color: white; font-size: 0.8rem; }
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
@@ -64,9 +65,12 @@
 
 <div id="authSection">
     <h2>Acesso Quântica</h2>
-    <div class="login-field"><label>E-mail</label><input type="email" id="loginEmail" placeholder="seu@email.com"></div>
-    <div class="login-field"><label>Senha</label><input type="password" id="loginPassword" placeholder="******"></div>
+    <div class="login-field"><label>Usuário (Nome)</label><input type="text" id="loginEmail" placeholder="Ex: gustavo"></div>
+    <div class="login-field"><label>Senha (Mín. 6 dígitos)</label><input type="password" id="loginPassword" placeholder="******"></div>
+    
     <button class="btn btn-save" id="btnLogin">Entrar no Sistema</button>
+    <button class="btn btn-reg" id="btnRegistrar">Criar Nova Conta</button>
+    
     <p id="loginError" style="color:red; margin-top:10px; display:none; font-size:0.8rem;"></p>
 </div>
 
@@ -112,38 +116,61 @@
 
 <script type="module">
     import { auth, db } from './firebase-config.js';
-    import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     let currentTab = 'ativos';
     let globalData = { funcionarios: [], aprovados: [], reprovados: [] };
 
+    const formatarUsuario = (texto) => texto.includes('@') ? texto : `${texto.trim().toLowerCase()}@quantica.com`;
+
     // --- LOGIN ---
     document.getElementById('btnLogin').onclick = async () => {
+        const user = formatarUsuario(document.getElementById('loginEmail').value);
+        const pass = document.getElementById('loginPassword').value;
         try {
-            await signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
+            await signInWithEmailAndPassword(auth, user, pass);
         } catch (error) {
-            document.getElementById('loginError').innerText = "Acesso negado.";
+            document.getElementById('loginError').innerText = "Usuário ou senha incorretos.";
             document.getElementById('loginError').style.display = 'block';
         }
     };
+
+    // --- CADASTRO DE NOVO USUÁRIO ---
+    document.getElementById('btnRegistrar').onclick = async () => {
+        const user = formatarUsuario(document.getElementById('loginEmail').value);
+        const pass = document.getElementById('loginPassword').value;
+
+        if (pass.length < 6) {
+            alert("A senha deve ter no mínimo 6 dígitos.");
+            return;
+        }
+
+        try {
+            await createUserWithEmailAndPassword(auth, user, pass);
+            alert("Conta criada com sucesso!");
+        } catch (error) {
+            if (error.code === 'auth/email-already-in-use') alert("Este usuário já existe.");
+            else alert("Erro ao criar conta: " + error.message);
+        }
+    };
+
     document.getElementById('btnLogout').onclick = () => signOut(auth);
 
     onAuthStateChanged(auth, (user) => {
         if (user) {
             document.getElementById('authSection').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
-            document.getElementById('userNameDisplay').innerText = `Logado: ${user.email}`;
-            ouvirDados(); // Inicia a escuta global
+            document.getElementById('userNameDisplay').innerText = `Logado: ${user.email.split('@')[0]}`;
+            ouvirDados();
         } else {
             document.getElementById('authSection').style.display = 'block';
             document.getElementById('appContent').style.display = 'none';
         }
     });
 
-    // --- BANCO DE DADOS GLOBAL ---
+    // --- BANCO DE DADOS ---
     function ouvirDados() {
-        // Agora consultamos a coleção SEM o filtro de userId para que todos vejam tudo
         const q = query(collection(db, "contratos"), orderBy("nome", "asc"));
         onSnapshot(q, (snapshot) => {
             globalData = { funcionarios: [], aprovados: [], reprovados: [] };
@@ -160,8 +187,9 @@
     document.getElementById('btnSalvarFirebase').onclick = async () => {
         const docId = document.getElementById('editDocId').value;
         const dataInicioVal = document.getElementById('dataInicio').value;
+        if(!dataInicioVal || !document.getElementById('nome').value) return alert("Preencha os campos!");
+
         const dataInicio = new Date(dataInicioVal + 'T00:00:00');
-        
         const d45 = new Date(dataInicio); d45.setDate(dataInicio.getDate() + 45);
         const d90 = new Date(dataInicio); d90.setDate(dataInicio.getDate() + 90);
 
@@ -175,7 +203,7 @@
             data45: d45.toISOString().split('T')[0],
             data90: d90.toISOString().split('T')[0],
             status: 'ativo',
-            editadoPor: auth.currentUser.email // Registra quem mexeu por último
+            editadoPor: auth.currentUser.email.split('@')[0]
         };
 
         try {
@@ -188,6 +216,10 @@
     window.toggleForm = () => {
         const fs = document.getElementById('formSection');
         fs.style.display = fs.style.display === 'block' ? 'none' : 'block';
+        if(fs.style.display === 'none') {
+            document.getElementById('editDocId').value = '';
+            document.getElementById('formTitle').innerText = 'Cadastrar Funcionário';
+        }
     };
 
     window.avaliar = async (id, acao) => {
@@ -195,7 +227,7 @@
         await updateDoc(doc(db, "contratos", id), { 
             status: status, 
             dataAvaliacao: new Date().toLocaleDateString('pt-BR'),
-            avaliadoPor: auth.currentUser.email
+            avaliadoPor: auth.currentUser.email.split('@')[0]
         });
     };
 
@@ -237,7 +269,7 @@
                         <p>45 Dias: ${f.data45.split('-').reverse().join('/')}</p>
                         <p>90 Dias: ${f.data90.split('-').reverse().join('/')}</p>
                         <p><strong>Restam: ${dias} dias</strong></p>
-                        <p style="font-size:0.7rem; color:#999">Editado por: ${f.editadoPor || 'Sist.'}</p>
+                        <p style="font-size:0.7rem; color:#999">Autor: ${f.editadoPor || 'Sist.'}</p>
                         <div class="actions">
                             <button class="btn-small btn-edit" onclick="editar('${f.firebaseId}')">Editar</button>
                             <button class="btn-small btn-pass" onclick="avaliar('${f.firebaseId}', 'passou')">✔</button>
@@ -252,7 +284,7 @@
             const lista = currentTab === 'aprovados' ? globalData.aprovados : globalData.reprovados;
             let html = `<table class="history-table"><thead><tr><th>Nome</th><th>Matrícula</th><th>90 Dias</th><th>Avaliador</th><th>Ação</th></tr></thead><tbody>`;
             lista.forEach(f => {
-                html += `<tr><td>${f.nome}</td><td>${f.matricula}</td><td>${f.data90}</td><td>${f.avaliadoPor || '--'}</td><td><button class="btn-small btn-del" onclick="excluir('${f.firebaseId}')">Remover</button></td></tr>`;
+                html += `<tr><td>${f.nome}</td><td>${f.matricula}</td><td>${f.data90.split('-').reverse().join('/')}</td><td>${f.avaliadoPor || '--'}</td><td><button class="btn-small btn-del" onclick="excluir('${f.firebaseId}')">Remover</button></td></tr>`;
             });
             container.innerHTML = html + `</tbody></table>`;
         }
