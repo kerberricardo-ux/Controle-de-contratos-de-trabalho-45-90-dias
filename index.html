@@ -24,6 +24,16 @@
         body { background-color: #e9ecef; margin: 0; padding: 20px; color: var(--primary); }
         .container { max-width: 1200px; margin: 0 auto; }
 
+        /* Estilos da Tela de Login */
+        #authSection {
+            max-width: 400px; margin: 80px auto; background: white; padding: 30px;
+            border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        #authSection h2 { margin-bottom: 25px; color: var(--primary); }
+        .login-field { margin-bottom: 15px; text-align: left; }
+        .login-field label { display: block; margin-bottom: 5px; font-weight: 600; }
+
         header { 
             background: white; padding: 20px; border-radius: 8px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px;
@@ -50,13 +60,12 @@
         .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; }
         
-        .calc-info { background: #f0f7ff; padding: 10px; border-radius: 4px; border: 1px dashed #3498db; margin-top: 10px; font-size: 0.85rem; }
-
         .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; transition: 0.3s; }
         .btn-add { background: var(--success); color: white; }
         .btn-pdf { background: var(--primary); color: white; }
-        .btn-save { background: var(--success); color: white; margin-top: 15px; }
+        .btn-save { background: var(--success); color: white; margin-top: 15px; width: 100%; }
         .btn-cancel { background: var(--danger); color: white; }
+        .btn-logout { background: #666; color: white; font-size: 0.8rem; }
 
         .turno-section { margin-top: 30px; }
         .turno-title { border-left: 5px solid var(--primary); padding-left: 10px; margin-bottom: 15px; }
@@ -72,13 +81,6 @@
         .card.status-red { border-top-color: var(--danger); }
         .card.status-black { border-top-color: var(--expired); background: #f1f1f1; }
 
-        .card h3 { margin: 0 0 10px 0; font-size: 1.1rem; }
-        .card p { margin: 5px 0; font-size: 0.9rem; color: #666; }
-        .card .badge { 
-            display: inline-block; padding: 3px 8px; border-radius: 12px; 
-            font-size: 0.75rem; font-weight: bold; background: #eee;
-        }
-
         .actions { display: flex; gap: 5px; margin-top: 15px; flex-wrap: wrap; }
         .btn-small { padding: 5px 10px; font-size: 0.8rem; border-radius: 3px; border: none; cursor: pointer; }
         .btn-edit { background: #3498db; color: white; }
@@ -86,52 +88,57 @@
         .btn-pass { background: #27ae60; color: white; }
         .btn-fail { background: #e67e22; color: white; }
 
-        .history-table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; overflow-x: auto; display: block; }
-        .history-table th, .history-table td { padding: 12px; border: 1px solid var(--border); text-align: left; white-space: nowrap; }
-        .history-table th { background: var(--light); }
-
-        .search-box { margin-bottom: 15px; }
-        .search-box input { max-width: 400px; }
+        .history-table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
+        .history-table th, .history-table td { padding: 12px; border: 1px solid var(--border); text-align: left; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div id="authSection">
+    <h2>Acesso Quântica</h2>
+    <div class="login-field">
+        <label>E-mail</label>
+        <input type="email" id="loginEmail" placeholder="seu@email.com">
+    </div>
+    <div class="login-field">
+        <label>Senha</label>
+        <input type="password" id="loginPassword" placeholder="******">
+    </div>
+    <button class="btn btn-save" id="btnLogin">Entrar no Sistema</button>
+    <p id="loginError" style="color:red; margin-top:10px; display:none; font-size:0.8rem;"></p>
+</div>
+
+<div id="appContent" class="container" style="display: none;">
     <header>
         <div>
             <h1>Controle de Contratos 45/90</h1>
-            <p>Quântica Sistemas de Segurança</p>
+            <p id="userNameDisplay" style="font-weight: bold; color: var(--success); margin: 0;"></p>
         </div>
         <div style="display: flex; gap: 10px;">
             <button class="btn btn-add" onclick="toggleForm()">+ Novo Cadastro</button>
-            <button class="btn btn-pdf" onclick="gerarPDF()">📄 Gerar Relatório PDF</button>
+            <button class="btn btn-pdf" id="btnGerarPDF">📄 Gerar PDF</button>
+            <button class="btn btn-logout" id="btnLogout">Sair</button>
         </div>
     </header>
 
     <div class="stats-bar" id="statsBar"></div>
 
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Buscar por nome ou matrícula..." onkeyup="renderizarTudo()">
+        <input type="text" id="searchInput" placeholder="Buscar por nome ou matrícula...">
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('ativos', this)">Ativos</button>
-        <button class="tab-btn" onclick="switchTab('aprovados', this)">Aprovados</button>
-        <button class="tab-btn" onclick="switchTab('reprovados', this)">Reprovados</button>
+        <button class="tab-btn active" id="tabAtivosBtn">Ativos</button>
+        <button class="tab-btn" id="tabAprovadosBtn">Aprovados</button>
+        <button class="tab-btn" id="tabReprovadosBtn">Reprovados</button>
     </div>
 
     <section id="formSection" class="form-section">
         <h2 id="formTitle">Cadastrar Funcionário</h2>
-        <input type="hidden" id="editIndex">
+        <input type="hidden" id="editDocId">
         <div class="grid-form">
-            <div>
-                <label>Nome Completo</label>
-                <input type="text" id="nome" required>
-            </div>
-            <div>
-                <label>Matrícula</label>
-                <input type="number" id="matricula" required>
-            </div>
+            <div><label>Nome Completo</label><input type="text" id="nome" required></div>
+            <div><label>Matrícula</label><input type="number" id="matricula" required></div>
             <div>
                 <label>Turno</label>
                 <select id="turno">
@@ -140,106 +147,77 @@
                     <option value="Noite">Noite</option>
                 </select>
             </div>
-            <div>
-                <label>Posto</label>
-                <input type="text" id="posto" required>
-            </div>
-            <div>
-                <label>Início do Contrato</label>
-                <input type="date" id="dataInicio" onchange="calcularDatasContrato()" required>
-            </div>
-            <div>
-                <label>Vencimento Atual (Data no Card)</label>
-                <input type="date" id="dataFim" required>
-            </div>
+            <div><label>Posto</label><input type="text" id="posto" required></div>
+            <div><label>Início do Contrato</label><input type="date" id="dataInicio" required></div>
+            <div><label>Vencimento (90 dias)</label><input type="date" id="dataFim" required></div>
         </div>
-        
-        <div id="calculoDatas" class="calc-info" style="display: none;">
-            <strong>Projeção de Contrato:</strong><br>
-            Término dos 45 dias: <span id="label45" style="font-weight: bold; color: var(--secondary);">--</span><br>
-            Término dos 90 dias: <span id="label90" style="font-weight: bold; color: var(--success);">--</span>
-            <input type="hidden" id="data45">
-            <input type="hidden" id="data90">
-        </div>
-
-        <button class="btn btn-save" onclick="salvarFuncionario()">Salvar Registro</button>
-        <button class="btn btn-cancel" onclick="toggleForm()">Cancelar</button>
+        <button class="btn btn-save" id="btnSalvarFirebase">Salvar Registro no Banco</button>
+        <button class="btn btn-cancel" onclick="toggleForm()" style="margin-top:10px; width:100%">Cancelar</button>
     </section>
 
     <main id="mainContent"></main>
 </div>
 
-<script>
-    let db = JSON.parse(localStorage.getItem('quantica_db')) || {
-        funcionarios: [],
-        aprovados: [],
-        reprovados: []
-    };
+<script type="module">
+    import { auth, db } from './firebase-config.js';
+    import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { collection, addDoc, getDocs, query, where, doc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     let currentTab = 'ativos';
+    let globalData = { funcionarios: [], aprovados: [], reprovados: [] };
 
-    function saveDB() {
-        localStorage.setItem('quantica_db', JSON.stringify(db));
-        renderizarTudo();
+    // --- AUTENTICAÇÃO ---
+    const loginEmail = document.getElementById('loginEmail');
+    const loginPass = document.getElementById('loginPassword');
+    const btnLogin = document.getElementById('btnLogin');
+    const loginError = document.getElementById('loginError');
+
+    btnLogin.onclick = async () => {
+        try {
+            await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
+        } catch (error) {
+            loginError.innerText = "E-mail ou senha incorretos.";
+            loginError.style.display = 'block';
+        }
+    };
+
+    document.getElementById('btnLogout').onclick = () => signOut(auth);
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('appContent').style.display = 'block';
+            document.getElementById('userNameDisplay').innerText = user.email;
+            ouvirDados(user.uid);
+        } else {
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('appContent').style.display = 'none';
+        }
+    });
+
+    // --- FIRESTORE (BANCO DE DADOS) ---
+    function ouvirDados(uid) {
+        const q = query(collection(db, "contratos"), where("userId", "==", uid));
+        onSnapshot(q, (snapshot) => {
+            globalData = { funcionarios: [], aprovados: [], reprovados: [] };
+            snapshot.forEach((doc) => {
+                const item = { ...doc.data(), firebaseId: doc.id };
+                if (item.status === 'aprovado') globalData.aprovados.push(item);
+                else if (item.status === 'reprovado') globalData.reprovados.push(item);
+                else globalData.funcionarios.push(item);
+            });
+            renderizarTudo();
+        });
     }
 
-    function toggleForm() {
-        const fs = document.getElementById('formSection');
-        fs.style.display = fs.style.display === 'block' ? 'none' : 'block';
-        if(fs.style.display === 'none') limparForm();
-    }
-
-    function limparForm() {
-        document.getElementById('nome').value = '';
-        document.getElementById('matricula').value = '';
-        document.getElementById('posto').value = '';
-        document.getElementById('dataInicio').value = '';
-        document.getElementById('dataFim').value = '';
-        document.getElementById('editIndex').value = '';
-        document.getElementById('calculoDatas').style.display = 'none';
-        document.getElementById('formTitle').innerText = 'Cadastrar Funcionário';
-    }
-
-    function calcularDatasContrato() {
-        const dataInicioStr = document.getElementById('dataInicio').value;
-        if(!dataInicioStr) return;
-
-        const dataInicio = new Date(dataInicioStr + 'T00:00:00');
+    document.getElementById('btnSalvarFirebase').onclick = async () => {
+        const docId = document.getElementById('editDocId').value;
+        const dataInicio = new Date(document.getElementById('dataInicio').value + 'T00:00:00');
         
-        const data45 = new Date(dataInicio);
-        data45.setDate(dataInicio.getDate() + 45);
-        
-        const data90 = new Date(dataInicio);
-        data90.setDate(dataInicio.getDate() + 90);
+        // Calcula 45 e 90 dias automaticamente
+        const d45 = new Date(dataInicio); d45.setDate(dataInicio.getDate() + 45);
+        const d90 = new Date(dataInicio); d90.setDate(dataInicio.getDate() + 90);
 
-        const formatInput = (date) => date.toISOString().split('T')[0];
-        const formatBR = (date) => date.toLocaleDateString('pt-BR');
-
-        document.getElementById('dataFim').value = formatInput(data90);
-        document.getElementById('data45').value = formatInput(data45);
-        document.getElementById('data90').value = formatInput(data90);
-        
-        document.getElementById('label45').innerText = formatBR(data45);
-        document.getElementById('label90').innerText = formatBR(data90);
-        document.getElementById('calculoDatas').style.display = 'block';
-    }
-
-    function calcularDiasRestantes(dataFim) {
-        const hoje = new Date();
-        hoje.setHours(0,0,0,0);
-        const fim = new Date(dataFim + 'T00:00:00');
-        const diff = fim - hoje;
-        return Math.ceil(diff / (1000 * 60 * 60 * 24));
-    }
-
-    function getStatusInfo(dias) {
-        if (dias < 0) return { class: 'status-black', label: 'Vencido' };
-        if (dias < 7) return { class: 'status-red', label: 'Urgente' };
-        if (dias <= 15) return { class: 'status-yellow', label: 'Atenção' };
-        return { class: 'status-green', label: 'Regular' };
-    }
-
-    function salvarFuncionario() {
         const func = {
             nome: document.getElementById('nome').value,
             matricula: document.getElementById('matricula').value,
@@ -247,183 +225,144 @@
             posto: document.getElementById('posto').value,
             dataInicio: document.getElementById('dataInicio').value,
             dataFim: document.getElementById('dataFim').value,
-            data45: document.getElementById('data45').value,
-            data90: document.getElementById('data90').value,
-            id: Date.now()
+            data45: d45.toISOString().split('T')[0],
+            data90: d90.toISOString().split('T')[0],
+            userId: auth.currentUser.uid,
+            status: 'ativo'
         };
 
-        if(!func.nome || !func.dataFim || !func.dataInicio) return alert("Preencha os campos obrigatórios.");
+        try {
+            if (docId) {
+                await updateDoc(doc(db, "contratos", docId), func);
+            } else {
+                await addDoc(collection(db, "contratos"), func);
+            }
+            toggleForm();
+            limparForm();
+        } catch (e) { alert("Erro ao salvar dados."); }
+    };
 
-        const editIdx = document.getElementById('editIndex').value;
-        if(editIdx !== "") {
-            db.funcionarios[editIdx] = func;
-        } else {
-            db.funcionarios.push(func);
-        }
+    window.toggleForm = () => {
+        const fs = document.getElementById('formSection');
+        fs.style.display = fs.style.display === 'block' ? 'none' : 'block';
+        if(fs.style.display === 'none') limparForm();
+    };
 
-        saveDB();
-        toggleForm();
+    function limparForm() {
+        document.getElementById('editDocId').value = '';
+        document.getElementById('nome').value = '';
+        document.getElementById('matricula').value = '';
+        document.getElementById('dataInicio').value = '';
+        document.getElementById('dataFim').value = '';
+        document.getElementById('formTitle').innerText = 'Cadastrar Funcionário';
     }
 
-    function editarFuncionario(index) {
-        const f = db.funcionarios[index];
+    window.avaliar = async (id, acao) => {
+        const status = acao === 'passou' ? 'aprovado' : 'reprovado';
+        await updateDoc(doc(db, "contratos", id), { 
+            status: status, 
+            dataAvaliacao: new Date().toLocaleDateString('pt-BR') 
+        });
+    };
+
+    window.excluir = async (id) => {
+        if(confirm("Deseja excluir permanentemente?")) await deleteDoc(doc(db, "contratos", id));
+    };
+
+    window.editar = (id) => {
+        const f = [...globalData.funcionarios, ...globalData.aprovados, ...globalData.reprovados].find(i => i.firebaseId === id);
         document.getElementById('nome').value = f.nome;
         document.getElementById('matricula').value = f.matricula;
         document.getElementById('turno').value = f.turno;
         document.getElementById('posto').value = f.posto;
         document.getElementById('dataInicio').value = f.dataInicio;
         document.getElementById('dataFim').value = f.dataFim;
-        document.getElementById('data45').value = f.data45 || "";
-        document.getElementById('data90').value = f.data90 || "";
-        document.getElementById('editIndex').value = index;
-        document.getElementById('formTitle').innerText = 'Editando Funcionário';
+        document.getElementById('editDocId').value = f.firebaseId;
+        document.getElementById('formTitle').innerText = 'Editar Registro';
         document.getElementById('formSection').style.display = 'block';
-        calcularDatasContrato();
-        window.scrollTo(0,0);
-    }
+    };
 
-    function excluirFuncionario(index, tipo = 'ativos') {
-        if(confirm("Deseja realmente excluir este registro?")) {
-            if(tipo === 'ativos') db.funcionarios.splice(index, 1);
-            if(tipo === 'aprovados') db.aprovados.splice(index, 1);
-            if(tipo === 'reprovados') db.reprovados.splice(index, 1);
-            saveDB();
-        }
-    }
-
-    function avaliar(index, status) {
-        const func = db.funcionarios.splice(index, 1)[0];
-        func.dataAvaliacao = new Date().toLocaleDateString('pt-BR');
-        if(status === 'passou') db.aprovados.push(func);
-        else db.reprovados.push(func);
-        saveDB();
-    }
-
-    function switchTab(tab, btn) {
-        currentTab = tab;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderizarTudo();
-    }
-
-    function formatDataBR(dataISO) {
-        if(!dataISO) return "--";
-        return dataISO.split('-').reverse().join('/');
-    }
-
+    // --- RENDERIZAÇÃO ---
     function renderizarTudo() {
         const container = document.getElementById('mainContent');
         const search = document.getElementById('searchInput').value.toLowerCase();
         container.innerHTML = '';
 
         if(currentTab === 'ativos') {
-            const turnos = ['Manhã', 'Tarde', 'Noite'];
-            turnos.forEach(turno => {
-                const filtrados = db.funcionarios.filter(f => 
-                    f.turno === turno && 
-                    (f.nome.toLowerCase().includes(search) || f.matricula.includes(search))
-                );
-
-                let html = `
-                    <section class="turno-section">
-                        <h2 class="turno-title">${turno} (${filtrados.length})</h2>
-                        <div class="cards-grid">
-                `;
-
-                filtrados.forEach((f) => {
-                    const dias = calcularDiasRestantes(f.dataFim);
-                    const status = getStatusInfo(dias);
-                    const originalIdx = db.funcionarios.findIndex(item => item.id === f.id);
+            ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
+                const filtrados = globalData.funcionarios.filter(f => f.turno === turno && (f.nome.toLowerCase().includes(search) || f.matricula.includes(search)));
+                let html = `<section class="turno-section"><h2 class="turno-title">${turno} (${filtrados.length})</h2><div class="cards-grid">`;
+                
+                filtrados.forEach(f => {
+                    const hoje = new Date(); hoje.setHours(0,0,0,0);
+                    const fim = new Date(f.dataFim + 'T00:00:00');
+                    const dias = Math.ceil((fim - hoje) / (1000 * 60 * 60 * 24));
+                    
+                    let statusClass = 'status-green'; let label = 'Regular';
+                    if(dias < 0) { statusClass = 'status-black'; label = 'Vencido'; }
+                    else if(dias < 7) { statusClass = 'status-red'; label = 'Urgente'; }
+                    else if(dias <= 15) { statusClass = 'status-yellow'; label = 'Atenção'; }
 
                     html += `
-                        <div class="card ${status.class}">
+                        <div class="card ${statusClass}">
                             <h3>${f.nome}</h3>
                             <p><strong>Matrícula:</strong> ${f.matricula}</p>
-                            <p><strong>45 Dias:</strong> ${formatDataBR(f.data45)}</p>
-                            <p><strong>90 Dias:</strong> ${formatDataBR(f.data90)}</p>
+                            <p><strong>45 Dias:</strong> ${f.data45.split('-').reverse().join('/')}</p>
+                            <p><strong>90 Dias:</strong> ${f.data90.split('-').reverse().join('/')}</p>
                             <p><strong>Restam:</strong> ${dias} dias</p>
-                            <span class="badge">${status.label}</span>
                             <div class="actions">
-                                <button class="btn-small btn-edit" onclick="editarFuncionario(${originalIdx})">Editar</button>
-                                <button class="btn-small btn-pass" onclick="avaliar(${originalIdx}, 'passou')">✔ Passou</button>
-                                <button class="btn-small btn-fail" onclick="avaliar(${originalIdx}, 'falhou')">✖ Reprovou</button>
-                                <button class="btn-small btn-del" onclick="excluirFuncionario(${originalIdx})">Excluir</button>
+                                <button class="btn-small btn-edit" onclick="editar('${f.firebaseId}')">Editar</button>
+                                <button class="btn-small btn-pass" onclick="avaliar('${f.firebaseId}', 'passou')">✔ Passou</button>
+                                <button class="btn-small btn-fail" onclick="avaliar('${f.firebaseId}', 'falhou')">✖ Reprovou</button>
+                                <button class="btn-small btn-del" onclick="excluir('${f.firebaseId}')">Excluir</button>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 });
-
-                html += `</div></section>`;
-                container.innerHTML += html;
+                container.innerHTML += html + '</div></section>';
             });
         } else {
-            const lista = currentTab === 'aprovados' ? db.aprovados : db.reprovados;
-            let html = `<table class="history-table"><thead><tr><th>Nome</th><th>Matrícula</th><th>45 Dias</th><th>90 Dias</th><th>Data Avaliação</th><th>Ações</th></tr></thead><tbody>`;
-            lista.forEach((f, idx) => {
-                if(f.nome.toLowerCase().includes(search) || f.matricula.includes(search)) {
-                    html += `<tr><td>${f.nome}</td><td>${f.matricula}</td><td>${formatDataBR(f.data45)}</td><td>${formatDataBR(f.data90)}</td><td>${f.dataAvaliacao}</td><td><button class="btn-small btn-del" onclick="excluirFuncionario(${idx}, '${currentTab}')">Remover</button></td></tr>`;
-                }
+            const lista = currentTab === 'aprovados' ? globalData.aprovados : globalData.reprovados;
+            let html = `<table class="history-table"><thead><tr><th>Nome</th><th>Matrícula</th><th>90 Dias</th><th>Avaliação</th><th>Ação</th></tr></thead><tbody>`;
+            lista.forEach(f => {
+                html += `<tr><td>${f.nome}</td><td>${f.matricula}</td><td>${f.data90}</td><td>${f.dataAvaliacao || '--'}</td><td><button class="btn-small btn-del" onclick="excluir('${f.firebaseId}')">Remover</button></td></tr>`;
             });
-            html += `</tbody></table>`;
-            container.innerHTML = html;
+            container.innerHTML = html + `</tbody></table>`;
         }
         renderStats();
     }
 
     function renderStats() {
-        const total = db.funcionarios.length;
-        const vencidos = db.funcionarios.filter(f => calcularDiasRestantes(f.dataFim) < 0).length;
+        const total = globalData.funcionarios.length;
         document.getElementById('statsBar').innerHTML = `
-            <div class="stat-card"><strong>Total Ativos</strong><br>${total}</div>
-            <div class="stat-card" style="border-color: var(--danger)"><strong>Críticos/Vencidos</strong><br>${vencidos}</div>
-            <div class="stat-card" style="border-color: var(--success)"><strong>Aprovados</strong><br>${db.aprovados.length}</div>
+            <div class="stat-card"><strong>Ativos</strong><br>${total}</div>
+            <div class="stat-card" style="border-color: var(--success)"><strong>Aprovados</strong><br>${globalData.aprovados.length}</div>
+            <div class="stat-card" style="border-color: var(--danger)"><strong>Reprovados</strong><br>${globalData.reprovados.length}</div>
         `;
     }
 
-    function gerarPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'mm', 'a4'); // Orientação PAISAGEM (Landscape) para caber mais colunas
-        const totalPagesExp = "{total_pages_count_string}";
+    // Abas
+    document.getElementById('tabAtivosBtn').onclick = (e) => { currentTab = 'ativos'; updateTabs(e.target); };
+    document.getElementById('tabAprovadosBtn').onclick = (e) => { currentTab = 'aprovados'; updateTabs(e.target); };
+    document.getElementById('tabReprovadosBtn').onclick = (e) => { currentTab = 'reprovados'; updateTabs(e.target); };
 
-        const rows = db.funcionarios.map(f => [
-            f.nome,
-            f.matricula,
-            f.posto,
-            formatDataBR(f.dataInicio),
-            formatDataBR(f.data45),
-            formatDataBR(f.data90),
-            calcularDiasRestantes(f.dataFim)
-        ]);
-
-        doc.autoTable({
-            head: [['Nome', 'Matr.', 'Posto', 'Início', '45 Dias', '90 Dias', 'Dias Restantes']],
-            body: rows,
-            startY: 35,
-            theme: 'striped',
-            headStyles: { fillColor: [44, 62, 80], textColor: 255 },
-            styles: { fontSize: 9 },
-            didDrawPage: function (data) {
-                doc.setFontSize(14);
-                doc.text("RELATÓRIO DE CONTROLE DE CONTRATOS (45/90 DIAS)", data.settings.margin.left, 20);
-                
-                doc.setFontSize(10);
-                doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, data.settings.margin.left, 26);
-                doc.line(data.settings.margin.left, 28, 297 - data.settings.margin.right, 28);
-
-                let str = "Página " + doc.internal.getNumberOfPages();
-                if (typeof doc.putTotalPages === 'function') str = str + " de " + totalPagesExp;
-                doc.setFontSize(8);
-                doc.text("Quantica Sistemas de Seguranca Inteligente Ltda", data.settings.margin.left, 210 - 10);
-                doc.text(str, 260, 210 - 10);
-            },
-            margin: { top: 35 }
-        });
-
-        if (typeof doc.putTotalPages === 'function') doc.putTotalPages(totalPagesExp);
-        doc.save(`Controle_Contratos_Quantica_${new Date().getTime()}.pdf`);
+    function updateTabs(btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderizarTudo();
     }
 
-    renderizarTudo();
+    document.getElementById('searchInput').onkeyup = () => renderizarTudo();
+
+    // PDF
+    document.getElementById('btnGerarPDF').onclick = () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        const rows = globalData.funcionarios.map(f => [f.nome, f.matricula, f.posto, f.dataInicio, f.data45, f.data90]);
+        doc.text("RELATÓRIO DE CONTRATOS - QUÂNTICA", 14, 15);
+        doc.autoTable({ head: [['Nome', 'Matr.', 'Posto', 'Início', '45 Dias', '90 Dias']], body: rows, startY: 20 });
+        doc.save("Relatorio_Contratos.pdf");
+    };
+
 </script>
 </body>
 </html>
