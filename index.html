@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Contratos 45/90 - Quântica (Equipe)</title>
+    <title>Controle de Contratos 45/90 - Quântica</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -67,10 +67,8 @@
     <h2>Acesso Quântica</h2>
     <div class="login-field"><label>Usuário (Nome)</label><input type="text" id="loginEmail" placeholder="Ex: gustavo"></div>
     <div class="login-field"><label>Senha (Mín. 6 dígitos)</label><input type="password" id="loginPassword" placeholder="******"></div>
-    
     <button class="btn btn-save" id="btnLogin">Entrar no Sistema</button>
     <button class="btn btn-reg" id="btnRegistrar">Criar Nova Conta</button>
-    
     <p id="loginError" style="color:red; margin-top:10px; display:none; font-size:0.8rem;"></p>
 </div>
 
@@ -82,7 +80,7 @@
         </div>
         <div style="display: flex; gap: 10px;">
             <button class="btn btn-add" onclick="toggleForm()">+ Novo Cadastro</button>
-            <button class="btn btn-pdf" id="btnGerarPDF">📄 PDF</button>
+            <button class="btn btn-pdf" id="btnGerarPDF">📄 Gerar Relatório PDF</button>
             <button class="btn btn-logout" id="btnLogout">Sair</button>
         </div>
     </header>
@@ -105,7 +103,6 @@
             <div><label>Turno</label><select id="turno"><option value="Manhã">Manhã</option><option value="Tarde">Tarde</option><option value="Noite">Noite</option></select></div>
             <div><label>Posto</label><input type="text" id="posto" required></div>
             <div><label>Início do Contrato</label><input type="date" id="dataInicio" required></div>
-            <div><label>Vencimento (90 dias)</label><input type="date" id="dataFim" required></div>
         </div>
         <button class="btn btn-save" id="btnSalvarFirebase">Salvar Registro no Banco</button>
         <button class="btn btn-cancel" onclick="toggleForm()" style="margin-top:10px; width:100%">Cancelar</button>
@@ -123,36 +120,20 @@
     let globalData = { funcionarios: [], aprovados: [], reprovados: [] };
 
     const formatarUsuario = (texto) => texto.includes('@') ? texto : `${texto.trim().toLowerCase()}@quantica.com`;
+    const formatBR = (dataISO) => dataISO ? dataISO.split('-').reverse().join('/') : '--';
 
-    // --- LOGIN ---
+    // --- LOGIN E REGISTRO ---
     document.getElementById('btnLogin').onclick = async () => {
         const user = formatarUsuario(document.getElementById('loginEmail').value);
         const pass = document.getElementById('loginPassword').value;
-        try {
-            await signInWithEmailAndPassword(auth, user, pass);
-        } catch (error) {
-            document.getElementById('loginError').innerText = "Usuário ou senha incorretos.";
-            document.getElementById('loginError').style.display = 'block';
-        }
+        try { await signInWithEmailAndPassword(auth, user, pass); } catch (e) { alert("Acesso negado."); }
     };
 
-    // --- CADASTRO DE NOVO USUÁRIO ---
     document.getElementById('btnRegistrar').onclick = async () => {
         const user = formatarUsuario(document.getElementById('loginEmail').value);
         const pass = document.getElementById('loginPassword').value;
-
-        if (pass.length < 6) {
-            alert("A senha deve ter no mínimo 6 dígitos.");
-            return;
-        }
-
-        try {
-            await createUserWithEmailAndPassword(auth, user, pass);
-            alert("Conta criada com sucesso!");
-        } catch (error) {
-            if (error.code === 'auth/email-already-in-use') alert("Este usuário já existe.");
-            else alert("Erro ao criar conta: " + error.message);
-        }
+        if(pass.length < 6) return alert("Mínimo 6 dígitos.");
+        try { await createUserWithEmailAndPassword(auth, user, pass); alert("Conta criada!"); } catch (e) { alert("Erro ao criar conta."); }
     };
 
     document.getElementById('btnLogout').onclick = () => signOut(auth);
@@ -169,7 +150,6 @@
         }
     });
 
-    // --- BANCO DE DADOS ---
     function ouvirDados() {
         const q = query(collection(db, "contratos"), orderBy("nome", "asc"));
         onSnapshot(q, (snapshot) => {
@@ -187,11 +167,11 @@
     document.getElementById('btnSalvarFirebase').onclick = async () => {
         const docId = document.getElementById('editDocId').value;
         const dataInicioVal = document.getElementById('dataInicio').value;
-        if(!dataInicioVal || !document.getElementById('nome').value) return alert("Preencha os campos!");
+        if(!dataInicioVal || !document.getElementById('nome').value) return alert("Preencha Nome e Data de Início!");
 
-        const dataInicio = new Date(dataInicioVal + 'T00:00:00');
-        const d45 = new Date(dataInicio); d45.setDate(dataInicio.getDate() + 45);
-        const d90 = new Date(dataInicio); d90.setDate(dataInicio.getDate() + 90);
+        const dInicio = new Date(dataInicioVal + 'T00:00:00');
+        const d45 = new Date(dInicio); d45.setDate(dInicio.getDate() + 45);
+        const d90 = new Date(dInicio); d90.setDate(dInicio.getDate() + 90);
 
         const func = {
             nome: document.getElementById('nome').value,
@@ -199,9 +179,9 @@
             turno: document.getElementById('turno').value,
             posto: document.getElementById('posto').value,
             dataInicio: dataInicioVal,
-            dataFim: document.getElementById('dataFim').value,
             data45: d45.toISOString().split('T')[0],
             data90: d90.toISOString().split('T')[0],
+            dataFim: d90.toISOString().split('T')[0], // Base para os cards
             status: 'ativo',
             editadoPor: auth.currentUser.email.split('@')[0]
         };
@@ -216,10 +196,7 @@
     window.toggleForm = () => {
         const fs = document.getElementById('formSection');
         fs.style.display = fs.style.display === 'block' ? 'none' : 'block';
-        if(fs.style.display === 'none') {
-            document.getElementById('editDocId').value = '';
-            document.getElementById('formTitle').innerText = 'Cadastrar Funcionário';
-        }
+        if(fs.style.display === 'none') document.getElementById('editDocId').value = '';
     };
 
     window.avaliar = async (id, acao) => {
@@ -231,9 +208,7 @@
         });
     };
 
-    window.excluir = async (id) => {
-        if(confirm("Deseja excluir permanentemente?")) await deleteDoc(doc(db, "contratos", id));
-    };
+    window.excluir = async (id) => { if(confirm("Excluir?")) await deleteDoc(doc(db, "contratos", id)); };
 
     window.editar = (id) => {
         const f = [...globalData.funcionarios, ...globalData.aprovados, ...globalData.reprovados].find(i => i.firebaseId === id);
@@ -242,11 +217,15 @@
         document.getElementById('turno').value = f.turno;
         document.getElementById('posto').value = f.posto;
         document.getElementById('dataInicio').value = f.dataInicio;
-        document.getElementById('dataFim').value = f.dataFim;
         document.getElementById('editDocId').value = f.firebaseId;
-        document.getElementById('formTitle').innerText = 'Editar Registro';
         document.getElementById('formSection').style.display = 'block';
     };
+
+    function calcularDias(dataISO) {
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        const fim = new Date(dataISO + 'T00:00:00');
+        return Math.ceil((fim - hoje) / (1000 * 60 * 60 * 24));
+    }
 
     function renderizarTudo() {
         const container = document.getElementById('mainContent');
@@ -256,20 +235,16 @@
         if(currentTab === 'ativos') {
             ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
                 const filtrados = globalData.funcionarios.filter(f => f.turno === turno && (f.nome.toLowerCase().includes(search) || f.matricula.includes(search)));
-                let html = `<section style="margin-top:20px;"><h2 style="border-left:5px solid var(--primary); padding-left:10px;">${turno} (${filtrados.length})</h2><div class="cards-grid">`;
+                let html = `<section style="margin-top:20px;"><h2>${turno} (${filtrados.length})</h2><div class="cards-grid">`;
                 filtrados.forEach(f => {
-                    const hoje = new Date(); hoje.setHours(0,0,0,0);
-                    const fim = new Date(f.dataFim + 'T00:00:00');
-                    const dias = Math.ceil((fim - hoje) / (1000 * 60 * 60 * 24));
-                    let statusClass = dias < 0 ? 'status-black' : dias < 7 ? 'status-red' : dias <= 15 ? 'status-yellow' : 'status-green';
-                    
+                    const dias90 = calcularDias(f.data90);
+                    let statusClass = dias90 < 0 ? 'status-black' : dias90 < 7 ? 'status-red' : dias90 <= 15 ? 'status-yellow' : 'status-green';
                     html += `<div class="card ${statusClass}">
                         <h3>${f.nome}</h3>
                         <p>Matrícula: ${f.matricula}</p>
-                        <p>45 Dias: ${f.data45.split('-').reverse().join('/')}</p>
-                        <p>90 Dias: ${f.data90.split('-').reverse().join('/')}</p>
-                        <p><strong>Restam: ${dias} dias</strong></p>
-                        <p style="font-size:0.7rem; color:#999">Autor: ${f.editadoPor || 'Sist.'}</p>
+                        <p>45 Dias: ${formatBR(f.data45)}</p>
+                        <p>90 Dias: ${formatBR(f.data90)}</p>
+                        <p><strong>Faltam: ${dias90} dias (90 dias)</strong></p>
                         <div class="actions">
                             <button class="btn-small btn-edit" onclick="editar('${f.firebaseId}')">Editar</button>
                             <button class="btn-small btn-pass" onclick="avaliar('${f.firebaseId}', 'passou')">✔</button>
@@ -282,9 +257,9 @@
             });
         } else {
             const lista = currentTab === 'aprovados' ? globalData.aprovados : globalData.reprovados;
-            let html = `<table class="history-table"><thead><tr><th>Nome</th><th>Matrícula</th><th>90 Dias</th><th>Avaliador</th><th>Ação</th></tr></thead><tbody>`;
+            let html = `<table class="history-table"><thead><tr><th>Nome</th><th>Matrícula</th><th>Início</th><th>90 Dias</th><th>Avaliador</th></tr></thead><tbody>`;
             lista.forEach(f => {
-                html += `<tr><td>${f.nome}</td><td>${f.matricula}</td><td>${f.data90.split('-').reverse().join('/')}</td><td>${f.avaliadoPor || '--'}</td><td><button class="btn-small btn-del" onclick="excluir('${f.firebaseId}')">Remover</button></td></tr>`;
+                html += `<tr><td>${f.nome}</td><td>${f.matricula}</td><td>${formatBR(f.dataInicio)}</td><td>${formatBR(f.data90)}</td><td>${f.avaliadoPor || '--'}</td></tr>`;
             });
             container.innerHTML = html + `</tbody></table>`;
         }
@@ -294,8 +269,7 @@
     function renderStats() {
         document.getElementById('statsBar').innerHTML = `
             <div class="stat-card"><strong>Ativos</strong><br>${globalData.funcionarios.length}</div>
-            <div class="stat-card" style="border-color: var(--success)"><strong>Aprovados</strong><br>${globalData.aprovados.length}</div>
-            <div class="stat-card" style="border-color: var(--danger)"><strong>Reprovados</strong><br>${globalData.reprovados.length}</div>
+            <div class="stat-card"><strong>Aprovados</strong><br>${globalData.aprovados.length}</div>
         `;
     }
 
@@ -308,14 +282,31 @@
         btn.classList.add('active');
         renderizarTudo();
     }
-    document.getElementById('searchInput').onkeyup = () => renderizarTudo();
+
     document.getElementById('btnGerarPDF').onclick = () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('l', 'mm', 'a4');
-        const rows = globalData.funcionarios.map(f => [f.nome, f.matricula, f.posto, f.dataInicio, f.data45, f.data90]);
-        doc.text("RELATÓRIO DE CONTRATOS - QUÂNTICA", 14, 15);
-        doc.autoTable({ head: [['Nome', 'Matr.', 'Posto', 'Início', '45 Dias', '90 Dias']], body: rows, startY: 20 });
-        doc.save("Relatorio_Contratos_Equipe.pdf");
+        const rows = globalData.funcionarios.map(f => {
+            const d45 = calcularDias(f.data45);
+            const d90 = calcularDias(f.data90);
+            return [
+                f.nome,
+                f.matricula,
+                formatBR(f.dataInicio),
+                `${formatBR(f.data45)} (${d45} dias)`,
+                `${formatBR(f.data90)} (${d90} dias)`,
+                f.posto
+            ];
+        });
+        doc.setFontSize(14);
+        doc.text("AUDITORIA DE CONTRATOS 45/90 DIAS - QUÂNTICA", 14, 15);
+        doc.autoTable({ 
+            head: [['Funcionário', 'Matr.', 'Início', 'Prazo 45 Dias (Faltam)', 'Prazo 90 Dias (Faltam)', 'Posto']], 
+            body: rows, 
+            startY: 25,
+            theme: 'grid'
+        });
+        doc.save(`Relatorio_Auditoria_${new Date().toLocaleDateString('pt-BR')}.pdf`);
     };
 </script>
 </body>
