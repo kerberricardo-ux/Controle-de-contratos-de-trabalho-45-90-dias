@@ -170,8 +170,8 @@
         if(!dataInicioVal || !document.getElementById('nome').value) return alert("Preencha Nome e Data de Início!");
 
         const dInicio = new Date(dataInicioVal + 'T00:00:00');
-        const d45 = new Date(dInicio); d45.setDate(dInicio.getDate() + 45);
-        const d90 = new Date(dInicio); d90.setDate(dInicio.getDate() + 90);
+        const d45 = new Date(dInicio); d45.setDate(dInicio.getDate() + 44);
+        const d90 = new Date(dInicio); d90.setDate(dInicio.getDate() + 89);
 
         const func = {
             nome: document.getElementById('nome').value,
