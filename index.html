@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -19,6 +18,7 @@
         body { background-color: #e9ecef; margin: 0; padding: 20px; color: var(--primary); }
         .container { max-width: 1200px; margin: 0 auto; }
 
+        /* Login */
         #authSection {
             max-width: 400px; margin: 80px auto; background: white; padding: 30px;
             border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center;
@@ -26,6 +26,7 @@
         .login-field { margin-bottom: 15px; text-align: left; }
         .login-field label { display: block; margin-bottom: 5px; font-weight: 600; }
 
+        /* Header e Nav */
         header { 
             background: white; padding: 20px; border-radius: 8px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px;
@@ -36,9 +37,13 @@
         .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
         .tab-btn { padding: 10px 25px; border: none; background: #ddd; cursor: pointer; border-radius: 5px 5px 0 0; font-weight: 600; }
         .tab-btn.active { background: white; border-bottom: 2px solid var(--success); }
+
+        /* Formulário */
         .form-section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: none; border: 1px solid var(--border); }
         .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; }
+        
+        /* Botões */
         .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; transition: 0.3s; }
         .btn-add { background: var(--success); color: white; }
         .btn-pdf { background: var(--primary); color: white; }
@@ -46,20 +51,44 @@
         .btn-reg { background: #34495e; color: white; margin-top: 10px; width: 100%; }
         .btn-cancel { background: var(--danger); color: white; }
         .btn-logout { background: #666; color: white; font-size: 0.8rem; }
-        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
-        .card { background: white; border-radius: 8px; padding: 15px; border-top: 8px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
-        .card.status-green { border-top-color: var(--success); }
-        .card.status-yellow { border-top-color: var(--warning); }
-        .card.status-red { border-top-color: var(--danger); }
-        .card.status-black { border-top-color: var(--expired); background: #f1f1f1; }
-        .actions { display: flex; gap: 5px; margin-top: 15px; flex-wrap: wrap; }
-        .btn-small { padding: 5px 10px; font-size: 0.8rem; border-radius: 3px; border: none; cursor: pointer; }
+        .btn-small { padding: 6px 12px; font-size: 0.8rem; border-radius: 3px; border: none; cursor: pointer; }
         .btn-edit { background: #3498db; color: white; }
         .btn-del { background: #e74c3c; color: white; }
         .btn-pass { background: #27ae60; color: white; }
         .btn-fail { background: #e67e22; color: white; }
+
+        /* CARDS EXPANSÍVEIS */
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; align-items: start; }
+        .card { 
+            background: white; border-radius: 8px; padding: 15px; 
+            border-top: 8px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            cursor: pointer; overflow: hidden; transition: all 0.3s ease;
+            max-height: 60px; /* Esconde o conteúdo inicialmente */
+        }
+        .card.expanded { max-height: 500px; }
+        .card h3 { 
+            margin: 0; font-size: 1rem; display: flex; 
+            justify-content: space-between; align-items: center; 
+        }
+        .card h3::after { content: '▼'; font-size: 0.7rem; transition: 0.3s; }
+        .card.expanded h3::after { transform: rotate(180deg); }
+
+        .card-body { opacity: 0; transition: 0.3s; padding-top: 15px; pointer-events: none; }
+        .card.expanded .card-body { opacity: 1; pointer-events: auto; }
+
+        .card.status-green { border-top-color: var(--success); }
+        .card.status-yellow { border-top-color: var(--warning); }
+        .card.status-red { border-top-color: var(--danger); }
+        .card.status-black { border-top-color: var(--expired); background: #f1f1f1; }
+
+        .actions { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; border-top: 1px solid #eee; padding-top: 10px; }
+
+        /* Tabelas */
         .history-table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
         .history-table th, .history-table td { padding: 12px; border: 1px solid var(--border); text-align: left; }
+        
+        .turno-section { margin-bottom: 40px; }
+        .turno-title { border-bottom: 2px solid var(--secondary); padding-bottom: 5px; margin-bottom: 15px; color: var(--secondary); }
     </style>
 </head>
 <body>
@@ -76,18 +105,20 @@
 <div id="appContent" class="container" style="display: none;">
     <header>
         <div>
-            <h1>Controle de Contratos (Equipe)</h1>
+            <h1>Controle de Contratos</h1>
             <p id="userNameDisplay" style="font-weight: bold; color: var(--success); margin: 0;"></p>
         </div>
         <div style="display: flex; gap: 10px;">
             <button class="btn btn-add" onclick="toggleForm()">+ Novo Cadastro</button>
-            <button class="btn btn-pdf" id="btnGerarPDF">📄 Gerar Relatório PDF</button>
+            <button class="btn btn-pdf" id="btnGerarPDF">📄 Relatório</button>
             <button class="btn btn-logout" id="btnLogout">Sair</button>
         </div>
     </header>
 
     <div class="stats-bar" id="statsBar"></div>
-    <div class="search-box" style="margin-bottom: 15px;"><input type="text" id="searchInput" placeholder="Buscar por nome ou matrícula..." style="max-width: 400px;"></div>
+    <div class="search-box" style="margin-bottom: 15px;">
+        <input type="text" id="searchInput" placeholder="Buscar funcionário..." oninput="renderizarTudo()">
+    </div>
 
     <div class="tabs">
         <button class="tab-btn active" id="tabAtivosBtn">Ativos</button>
@@ -99,13 +130,13 @@
         <h2 id="formTitle">Cadastrar Funcionário</h2>
         <input type="hidden" id="editDocId">
         <div class="grid-form">
-            <div><label>Nome Completo</label><input type="text" id="nome" required></div>
-            <div><label>Matrícula</label><input type="number" id="matricula" required></div>
+            <div><label>Nome Completo</label><input type="text" id="nome"></div>
+            <div><label>Matrícula</label><input type="number" id="matricula"></div>
             <div><label>Turno</label><select id="turno"><option value="Manhã">Manhã</option><option value="Tarde">Tarde</option><option value="Noite">Noite</option></select></div>
-            <div><label>Posto</label><input type="text" id="posto" required></div>
-            <div><label>Início do Contrato</label><input type="date" id="dataInicio" required></div>
+            <div><label>Posto</label><input type="text" id="posto"></div>
+            <div><label>Início do Contrato</label><input type="date" id="dataInicio"></div>
         </div>
-        <button class="btn btn-save" id="btnSalvarFirebase">Salvar Registro no Banco</button>
+        <button class="btn btn-save" id="btnSalvarFirebase">Salvar Registro</button>
         <button class="btn btn-cancel" onclick="toggleForm()" style="margin-top:10px; width:100%">Cancelar</button>
     </section>
 
@@ -123,18 +154,18 @@
     const formatarUsuario = (texto) => texto.includes('@') ? texto : `${texto.trim().toLowerCase()}@quantica.com`;
     const formatBR = (dataISO) => dataISO ? dataISO.split('-').reverse().join('/') : '--';
 
-    // --- LOGIN E REGISTRO ---
+    // --- AUTENTICAÇÃO ---
     document.getElementById('btnLogin').onclick = async () => {
         const user = formatarUsuario(document.getElementById('loginEmail').value);
         const pass = document.getElementById('loginPassword').value;
-        try { await signInWithEmailAndPassword(auth, user, pass); } catch (e) { alert("Acesso negado."); }
+        try { await signInWithEmailAndPassword(auth, user, pass); } catch (e) { alert("Usuário ou senha inválidos."); }
     };
 
     document.getElementById('btnRegistrar').onclick = async () => {
         const user = formatarUsuario(document.getElementById('loginEmail').value);
         const pass = document.getElementById('loginPassword').value;
-        if(pass.length < 6) return alert("Mínimo 6 dígitos.");
-        try { await createUserWithEmailAndPassword(auth, user, pass); alert("Conta criada!"); } catch (e) { alert("Erro ao criar conta."); }
+        if(pass.length < 6) return alert("A senha deve ter no mínimo 6 dígitos.");
+        try { await createUserWithEmailAndPassword(auth, user, pass); alert("Conta criada com sucesso!"); } catch (e) { alert("Erro ao criar conta."); }
     };
 
     document.getElementById('btnLogout').onclick = () => signOut(auth);
@@ -143,7 +174,7 @@
         if (user) {
             document.getElementById('authSection').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
-            document.getElementById('userNameDisplay').innerText = `Logado: ${user.email.split('@')[0]}`;
+            document.getElementById('userNameDisplay').innerText = `Operador: ${user.email.split('@')[0].toUpperCase()}`;
             ouvirDados();
         } else {
             document.getElementById('authSection').style.display = 'block';
@@ -165,24 +196,26 @@
         });
     }
 
+    // --- CRUD ---
     document.getElementById('btnSalvarFirebase').onclick = async () => {
         const docId = document.getElementById('editDocId').value;
+        const nome = document.getElementById('nome').value;
         const dataInicioVal = document.getElementById('dataInicio').value;
-        if(!dataInicioVal || !document.getElementById('nome').value) return alert("Preencha Nome e Data de Início!");
+
+        if(!nome || !dataInicioVal) return alert("Nome e Data de Início são obrigatórios!");
 
         const dInicio = new Date(dataInicioVal + 'T00:00:00');
-        const d45 = new Date(dInicio); d45.setDate(dInicio.getDate() + 44);
-        const d90 = new Date(dInicio); d90.setDate(dInicio.getDate() + 89);
+        const d45 = new Date(dInicio); d45.setDate(dInicio.getDate() + 45);
+        const d90 = new Date(dInicio); d90.setDate(dInicio.getDate() + 90);
 
         const func = {
-            nome: document.getElementById('nome').value,
+            nome: nome,
             matricula: document.getElementById('matricula').value,
             turno: document.getElementById('turno').value,
             posto: document.getElementById('posto').value,
             dataInicio: dataInicioVal,
             data45: d45.toISOString().split('T')[0],
             data90: d90.toISOString().split('T')[0],
-            dataFim: d90.toISOString().split('T')[0], // Base para os cards
             status: 'ativo',
             editadoPor: auth.currentUser.email.split('@')[0]
         };
@@ -190,14 +223,9 @@
         try {
             if (docId) await updateDoc(doc(db, "contratos", docId), func);
             else await addDoc(collection(db, "contratos"), func);
+            limparForm();
             toggleForm();
-        } catch (e) { alert("Erro ao salvar."); }
-    };
-
-    window.toggleForm = () => {
-        const fs = document.getElementById('formSection');
-        fs.style.display = fs.style.display === 'block' ? 'none' : 'block';
-        if(fs.style.display === 'none') document.getElementById('editDocId').value = '';
+        } catch (e) { alert("Erro ao salvar dados."); }
     };
 
     window.avaliar = async (id, acao) => {
@@ -209,7 +237,7 @@
         });
     };
 
-    window.excluir = async (id) => { if(confirm("Excluir?")) await deleteDoc(doc(db, "contratos", id)); };
+    window.excluir = async (id) => { if(confirm("Deseja realmente excluir este registro?")) await deleteDoc(doc(db, "contratos", id)); };
 
     window.editar = (id) => {
         const f = [...globalData.funcionarios, ...globalData.aprovados, ...globalData.reprovados].find(i => i.firebaseId === id);
@@ -220,8 +248,10 @@
         document.getElementById('dataInicio').value = f.dataInicio;
         document.getElementById('editDocId').value = f.firebaseId;
         document.getElementById('formSection').style.display = 'block';
+        window.scrollTo(0,0);
     };
 
+    // --- LÓGICA DE INTERFACE ---
     function calcularDias(dataISO) {
         const hoje = new Date(); hoje.setHours(0,0,0,0);
         const fim = new Date(dataISO + 'T00:00:00');
@@ -235,32 +265,59 @@
 
         if(currentTab === 'ativos') {
             ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
-                const filtrados = globalData.funcionarios.filter(f => f.turno === turno && (f.nome.toLowerCase().includes(search) || f.matricula.includes(search)));
-                let html = `<section style="margin-top:20px;"><h2>${turno} (${filtrados.length})</h2><div class="cards-grid">`;
+                const filtrados = globalData.funcionarios
+                    .filter(f => f.turno === turno && (f.nome.toLowerCase().includes(search) || f.matricula.includes(search)))
+                    .sort((a, b) => a.nome.localeCompare(b.nome)); // ORDEM ALFABÉTICA
+
+                if(filtrados.length === 0 && search === "") return;
+
+                let turnoHtml = `<section class="turno-section">
+                                    <h2 class="turno-title">${turno} (${filtrados.length})</h2>
+                                    <div class="cards-grid">`;
+                
                 filtrados.forEach(f => {
                     const dias90 = calcularDias(f.data90);
                     let statusClass = dias90 < 0 ? 'status-black' : dias90 < 7 ? 'status-red' : dias90 <= 15 ? 'status-yellow' : 'status-green';
-                    html += `<div class="card ${statusClass}">
-                        <h3>${f.nome}</h3>
-                        <p>Matrícula: ${f.matricula}</p>
-                        <p>45 Dias: ${formatBR(f.data45)}</p>
-                        <p>90 Dias: ${formatBR(f.data90)}</p>
-                        <p><strong>Faltam: ${dias90} dias (90 dias)</strong></p>
-                        <div class="actions">
-                            <button class="btn-small btn-edit" onclick="editar('${f.firebaseId}')">Editar</button>
-                            <button class="btn-small btn-pass" onclick="avaliar('${f.firebaseId}', 'passou')">✔</button>
-                            <button class="btn-small btn-fail" onclick="avaliar('${f.firebaseId}', 'falhou')">✖</button>
-                            <button class="btn-small btn-del" onclick="excluir('${f.firebaseId}')">Excluir</button>
-                        </div>
-                    </div>`;
+                    
+                    turnoHtml += `
+                        <div class="card ${statusClass}" onclick="this.classList.toggle('expanded')">
+                            <h3>${f.nome} <small style="font-weight:400; font-size:0.7rem; color:#666;">MAT: ${f.matricula}</small></h3>
+                            <div class="card-body">
+                                <p><strong>Posto:</strong> ${f.posto}</p>
+                                <p><strong>Início:</strong> ${formatBR(f.dataInicio)}</p>
+                                <p><strong>45 Dias:</strong> ${formatBR(f.data45)}</p>
+                                <p><strong>90 Dias:</strong> ${formatBR(f.data90)}</p>
+                                <p><strong>Status:</strong> ${dias90 < 0 ? 'Vencido' : 'Faltam ' + dias90 + ' dias'}</p>
+                                <div class="actions" onclick="event.stopPropagation()">
+                                    <button class="btn-small btn-edit" onclick="editar('${f.firebaseId}')">Editar</button>
+                                    <button class="btn-small btn-pass" onclick="avaliar('${f.firebaseId}', 'passou')">Aprovar</button>
+                                    <button class="btn-small btn-fail" onclick="avaliar('${f.firebaseId}', 'falhou')">Reprovar</button>
+                                    <button class="btn-small btn-del" onclick="excluir('${f.firebaseId}')">Excluir</button>
+                                </div>
+                            </div>
+                        </div>`;
                 });
-                container.innerHTML += html + '</div></section>';
+                container.innerHTML += turnoHtml + '</div></section>';
             });
         } else {
-            const lista = currentTab === 'aprovados' ? globalData.aprovados : globalData.reprovados;
-            let html = `<table class="history-table"><thead><tr><th>Nome</th><th>Matrícula</th><th>Início</th><th>90 Dias</th><th>Avaliador</th></tr></thead><tbody>`;
+            const lista = (currentTab === 'aprovados' ? globalData.aprovados : globalData.reprovados)
+                          .sort((a, b) => a.nome.localeCompare(b.nome));
+            
+            let html = `<table class="history-table">
+                            <thead><tr><th>Nome</th><th>Matrícula</th><th>Turno</th><th>Conclusão</th><th>Avaliador</th><th>Ações</th></tr></thead>
+                            <tbody>`;
             lista.forEach(f => {
-                html += `<tr><td>${f.nome}</td><td>${f.matricula}</td><td>${formatBR(f.dataInicio)}</td><td>${formatBR(f.data90)}</td><td>${f.avaliadoPor || '--'}</td></tr>`;
+                html += `<tr>
+                            <td>${f.nome}</td>
+                            <td>${f.matricula}</td>
+                            <td>${f.turno}</td>
+                            <td>${f.dataAvaliacao || '--'}</td>
+                            <td>${f.avaliadoPor || '--'}</td>
+                            <td>
+                                <button class="btn-small btn-edit" onclick="editar('${f.firebaseId}')">✏️</button>
+                                <button class="btn-small btn-del" onclick="excluir('${f.firebaseId}')">🗑️</button>
+                            </td>
+                         </tr>`;
             });
             container.innerHTML = html + `</tbody></table>`;
         }
@@ -271,9 +328,25 @@
         document.getElementById('statsBar').innerHTML = `
             <div class="stat-card"><strong>Ativos</strong><br>${globalData.funcionarios.length}</div>
             <div class="stat-card"><strong>Aprovados</strong><br>${globalData.aprovados.length}</div>
+            <div class="stat-card"><strong>Reprovados</strong><br>${globalData.reprovados.length}</div>
         `;
     }
 
+    window.toggleForm = () => {
+        const fs = document.getElementById('formSection');
+        fs.style.display = fs.style.display === 'block' ? 'none' : 'block';
+        if(fs.style.display === 'none') limparForm();
+    };
+
+    function limparForm() {
+        document.getElementById('editDocId').value = '';
+        document.getElementById('nome').value = '';
+        document.getElementById('matricula').value = '';
+        document.getElementById('posto').value = '';
+        document.getElementById('dataInicio').value = '';
+    }
+
+    // --- TABS ---
     document.getElementById('tabAtivosBtn').onclick = (e) => { currentTab = 'ativos'; updateTabs(e.target); };
     document.getElementById('tabAprovadosBtn').onclick = (e) => { currentTab = 'aprovados'; updateTabs(e.target); };
     document.getElementById('tabReprovadosBtn').onclick = (e) => { currentTab = 'reprovados'; updateTabs(e.target); };
@@ -284,30 +357,22 @@
         renderizarTudo();
     }
 
+    // --- PDF ---
     document.getElementById('btnGerarPDF').onclick = () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('l', 'mm', 'a4');
-        const rows = globalData.funcionarios.map(f => {
-            const d45 = calcularDias(f.data45);
-            const d90 = calcularDias(f.data90);
-            return [
-                f.nome,
-                f.matricula,
-                formatBR(f.dataInicio),
-                `${formatBR(f.data45)} (${d45} dias)`,
-                `${formatBR(f.data90)} (${d90} dias)`,
-                f.posto
-            ];
-        });
-        doc.setFontSize(14);
-        doc.text("AUDITORIA DE CONTRATOS 45/90 DIAS - QUÂNTICA", 14, 15);
+        const rows = globalData.funcionarios
+            .sort((a,b) => a.nome.localeCompare(b.nome))
+            .map(f => [f.nome, f.matricula, f.turno, formatBR(f.dataInicio), formatBR(f.data45), formatBR(f.data90), f.posto]);
+
+        doc.text("Relatório de Contratos Quântica", 14, 15);
         doc.autoTable({ 
-            head: [['Funcionário', 'Matr.', 'Início', 'Prazo 45 Dias (Faltam)', 'Prazo 90 Dias (Faltam)', 'Posto']], 
+            head: [['Nome', 'Mat.', 'Turno', 'Início', '45 Dias', '90 Dias', 'Posto']], 
             body: rows, 
-            startY: 25,
+            startY: 20,
             theme: 'grid'
         });
-        doc.save(`Relatorio_Auditoria_${new Date().toLocaleDateString('pt-BR')}.pdf`);
+        doc.save(`Relatorio_${new Date().toLocaleDateString('pt-BR')}.pdf`);
     };
 </script>
 </body>
