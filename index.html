@@ -26,37 +26,34 @@
         .login-field { margin-bottom: 15px; text-align: left; }
         .login-field label { display: block; margin-bottom: 5px; font-weight: 600; }
 
-        /* Header */
         header { 
             background: white; padding: 20px; border-radius: 8px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px;
             display: flex; justify-content: space-between; align-items: center;
         }
+
+        /* Stats e Tabs */
         .stats-bar { display: flex; gap: 15px; margin-bottom: 20px; }
         .stat-card { background: white; padding: 15px; border-radius: 8px; flex: 1; text-align: center; border-bottom: 4px solid var(--primary); }
-        
-        /* Tabs */
         .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
         .tab-btn { padding: 10px 25px; border: none; background: #ddd; cursor: pointer; border-radius: 5px 5px 0 0; font-weight: 600; }
         .tab-btn.active { background: white; border-bottom: 2px solid var(--success); }
 
-        /* Formulário */
+        /* Form */
         .form-section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: none; border: 1px solid var(--border); }
         .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; }
-        
+
         /* Botões */
         .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; transition: 0.3s; }
         .btn-add { background: var(--success); color: white; }
         .btn-pdf { background: var(--primary); color: white; }
         .btn-save { background: var(--success); color: white; margin-top: 15px; width: 100%; }
-        .btn-reg { background: #34495e; color: white; margin-top: 10px; width: 100%; }
-        .btn-cancel { background: var(--danger); color: white; }
         .btn-logout { background: #666; color: white; font-size: 0.8rem; }
         .btn-small { padding: 6px 12px; font-size: 0.8rem; border-radius: 3px; border: none; cursor: pointer; }
         .btn-edit { background: #3498db; color: white; }
         .btn-del { background: #e74c3c; color: white; }
-        .btn-pass { background: #27ae60; color: white; }
+        .btn-pass { background: var(--success); color: white; }
         .btn-fail { background: #e67e22; color: white; }
 
         /* CARDS EXPANSÍVEIS E STATUS */
@@ -68,34 +65,31 @@
             max-height: 58px; 
         }
         .card.expanded { max-height: 500px; }
-        
-        .card h3 { 
-            margin: 0; font-size: 1rem; display: flex; 
-            align-items: center; justify-content: flex-start; gap: 10px;
-        }
+        .card h3 { margin: 0; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
         .card h3::after { content: '▼'; font-size: 0.7rem; margin-left: auto; transition: 0.3s; color: #999; }
         .card.expanded h3::after { transform: rotate(180deg); }
 
-        .status-dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+        .status-dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
         .status-green .status-dot { background-color: var(--success); }
         .status-yellow .status-dot { background-color: var(--warning); }
         .status-red .status-dot { background-color: var(--danger); }
         .status-black .status-dot { background-color: #000; }
 
-        .atencao-icon { color: var(--danger); font-weight: 800; font-size: 0.75rem; animation: piscar 1.2s infinite; }
-        @keyframes piscar { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .atencao-icon { color: var(--danger); font-weight: 800; font-size: 0.7rem; animation: piscar 1s infinite; margin-left: 5px; }
+        @keyframes piscar { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
 
-        .card-body { opacity: 0; transition: 0.3s; padding-top: 15px; pointer-events: none; }
+        .card-body { opacity: 0; transition: 0.3s; padding-top: 15px; pointer-events: none; font-size: 0.9rem; }
         .card.expanded .card-body { opacity: 1; pointer-events: auto; }
-        
-        .card.status-black { background: #f8f9fa; }
+        .card-info-box { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-top: 10px; border-left: 4px solid #ddd; }
 
         .actions { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; border-top: 1px solid #eee; padding-top: 10px; }
 
-        /* Turnos e Tabelas */
+        /* Seções de Turno */
         .turno-section { margin-bottom: 35px; }
-        .turno-title { border-bottom: 2px solid var(--secondary); padding-bottom: 5px; margin-bottom: 15px; color: var(--secondary); font-size: 1.2rem; }
-        .history-table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
+        .turno-title { border-bottom: 2px solid var(--secondary); padding-bottom: 5px; margin-bottom: 15px; color: var(--secondary); font-size: 1.1rem; }
+        
+        /* Tabelas */
+        .history-table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; font-size: 0.9rem; }
         .history-table th, .history-table td { padding: 12px; border: 1px solid var(--border); text-align: left; }
     </style>
 </head>
@@ -103,21 +97,20 @@
 
 <div id="authSection">
     <h2>Acesso Quântica</h2>
-    <div class="login-field"><label>Usuário</label><input type="text" id="loginEmail" placeholder="Nome de usuário"></div>
+    <div class="login-field"><label>Usuário</label><input type="text" id="loginEmail" placeholder="Seu nome"></div>
     <div class="login-field"><label>Senha</label><input type="password" id="loginPassword" placeholder="******"></div>
     <button class="btn btn-save" id="btnLogin">Entrar</button>
-    <button class="btn btn-reg" id="btnRegistrar">Criar Conta</button>
 </div>
 
 <div id="appContent" class="container" style="display: none;">
     <header>
         <div>
             <h1>Controle de Contratos</h1>
-            <p id="userNameDisplay" style="font-weight: bold; color: var(--success); margin: 0;"></p>
+            <p id="userNameDisplay" style="font-weight: bold; color: var(--success); margin: 0; font-size: 0.8rem;"></p>
         </div>
         <div style="display: flex; gap: 10px;">
             <button class="btn btn-add" onclick="toggleForm()">+ Novo Cadastro</button>
-            <button class="btn btn-pdf" id="btnGerarPDF">📄 PDF</button>
+            <button class="btn btn-pdf" id="btnGerarPDF">📄 Relatório PDF</button>
             <button class="btn btn-logout" id="btnLogout">Sair</button>
         </div>
     </header>
@@ -144,7 +137,7 @@
             <div><label>Posto</label><input type="text" id="posto"></div>
             <div><label>Início do Contrato</label><input type="date" id="dataInicio"></div>
         </div>
-        <button class="btn btn-save" id="btnSalvarFirebase">Salvar no Banco</button>
+        <button class="btn btn-save" id="btnSalvarFirebase">Confirmar Registro</button>
         <button class="btn btn-cancel" onclick="toggleForm()" style="margin-top:10px; width:100%">Cancelar</button>
     </section>
 
@@ -153,7 +146,7 @@
 
 <script type="module">
     import { auth, db } from './firebase-config.js';
-    import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     let currentTab = 'ativos';
@@ -162,17 +155,11 @@
     const formatarUsuario = (t) => t.includes('@') ? t : `${t.trim().toLowerCase()}@quantica.com`;
     const formatBR = (d) => d ? d.split('-').reverse().join('/') : '--';
 
-    // --- AUTH ---
+    // --- AUTENTICAÇÃO ---
     document.getElementById('btnLogin').onclick = async () => {
         const u = formatarUsuario(document.getElementById('loginEmail').value);
         const p = document.getElementById('loginPassword').value;
-        try { await signInWithEmailAndPassword(auth, u, p); } catch (e) { alert("Acesso inválido."); }
-    };
-    document.getElementById('btnRegistrar').onclick = async () => {
-        const u = formatarUsuario(document.getElementById('loginEmail').value);
-        const p = document.getElementById('loginPassword').value;
-        if(p.length < 6) return alert("Senha curta.");
-        try { await createUserWithEmailAndPassword(auth, u, p); alert("Criado!"); } catch (e) { alert("Erro."); }
+        try { await signInWithEmailAndPassword(auth, u, p); } catch (e) { alert("Erro de acesso."); }
     };
     document.getElementById('btnLogout').onclick = () => signOut(auth);
 
@@ -180,7 +167,7 @@
         if (user) {
             document.getElementById('authSection').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
-            document.getElementById('userNameDisplay').innerText = `Logado: ${user.email.split('@')[0].toUpperCase()}`;
+            document.getElementById('userNameDisplay').innerText = `OPERADOR: ${user.email.split('@')[0].toUpperCase()}`;
             ouvirDados();
         } else {
             document.getElementById('authSection').style.display = 'block';
@@ -202,21 +189,12 @@
         });
     }
 
-    // --- FUNÇÕES AUXILIARES ---
+    // --- CÁLCULOS ---
     function calcularDias(dataISO) {
         const hoje = new Date(); hoje.setHours(0,0,0,0);
         const fim = new Date(dataISO + 'T00:00:00');
         return Math.ceil((fim - hoje) / (1000 * 60 * 60 * 24));
     }
-
-    window.toggleForm = () => {
-        const fs = document.getElementById('formSection');
-        fs.style.display = fs.style.display === 'block' ? 'none' : 'block';
-        if(fs.style.display === 'none') {
-            document.getElementById('editDocId').value = '';
-            document.getElementById('nome').value = '';
-        }
-    };
 
     // --- RENDERIZAÇÃO ---
     function renderizarTudo() {
@@ -240,40 +218,38 @@
                     const d45 = calcularDias(f.data45);
                     const d90 = calcularDias(f.data90);
                     
-                    let faseInfo = "";
-                    let sClass = "";
-                    let atencao = "";
+                    let statusClass = "";
+                    let infoPrazo = "";
+                    let alerta = "";
 
-                    // Lógica de Prioridade de Exibição de Prazo
+                    // Lógica de Status e Prazo (Quem está em qual fase?)
                     if (d45 >= 0) {
-                        faseInfo = `Faltam <strong>${d45} dias</strong> p/ o 1º Contrato (45d)`;
-                        sClass = d45 < 7 ? 'status-red' : d45 <= 15 ? 'status-yellow' : 'status-green';
+                        statusClass = d45 < 7 ? 'status-red' : d45 <= 15 ? 'status-yellow' : 'status-green';
+                        infoPrazo = `Faltam <strong>${d45} dias</strong> p/ o 1º Contrato (45d)`;
                     } else if (d90 >= 0) {
-                        faseInfo = `Faltam <strong>${d90} dias</strong> p/ o 2º Contrato (90d)`;
-                        sClass = d90 < 7 ? 'status-red' : d90 <= 15 ? 'status-yellow' : 'status-green';
+                        statusClass = d90 < 7 ? 'status-red' : d90 <= 15 ? 'status-yellow' : 'status-green';
+                        infoPrazo = `Faltam <strong>${d90} dias</strong> p/ o 2º Contrato (90d)`;
                     } else {
-                        faseInfo = `<span style="color:red">PRAZO FINAL EXCEDIDO</span>`;
-                        sClass = 'status-black';
-                        atencao = '<span class="atencao-icon">⚠️ ATENÇÃO</span>';
+                        statusClass = 'status-black';
+                        infoPrazo = `<span style="color:red; font-weight:bold;">PRAZO VENCIDO (90 DIAS)</span>`;
+                        alerta = '<span class="atencao-icon">⚠️ VENCIDO</span>';
                     }
 
                     html += `
-                        <div class="card ${sClass}" onclick="this.classList.toggle('expanded')">
-                            <h3><span class="status-dot"></span> ${f.nome} ${atencao}</h3>
+                        <div class="card ${statusClass}" onclick="this.classList.toggle('expanded')">
+                            <h3><span class="status-dot"></span> ${f.nome} ${alerta}</h3>
                             <div class="card-body">
-                                <p><strong>Matrícula:</strong> ${f.matricula}</p>
-                                <p><strong>Posto:</strong> ${f.posto}</p>
-                                <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
-                                <p><strong>Início:</strong> ${formatBR(f.dataInicio)}</p>
-                                <p><strong>Vence 45d:</strong> ${formatBR(f.data45)}</p>
-                                <p><strong>Vence 90d:</strong> ${formatBR(f.data90)}</p>
-                                <p style="margin-top:10px; padding:8px; background:#f0f0f0; border-radius:4px; font-size:0.9rem;">
-                                    ${faseInfo}
-                                </p>
+                                <p><strong>Matrícula:</strong> ${f.matricula} | <strong>Posto:</strong> ${f.posto}</p>
+                                <div class="card-info-box">
+                                    <p>📅 Início: ${formatBR(f.dataInicio)}</p>
+                                    <p>📅 Prazo 45 dias: ${formatBR(f.data45)}</p>
+                                    <p>📅 Prazo 90 dias: ${formatBR(f.data90)}</p>
+                                    <p style="margin-top:8px; border-top:1px solid #ddd; padding-top:5px;">${infoPrazo}</p>
+                                </div>
                                 <div class="actions" onclick="event.stopPropagation()">
                                     <button class="btn-small btn-edit" onclick="editar('${f.firebaseId}')">Editar</button>
-                                    <button class="btn-small btn-pass" onclick="avaliar('${f.firebaseId}', 'passou')">✔ Aprovar</button>
-                                    <button class="btn-small btn-fail" onclick="avaliar('${f.firebaseId}', 'falhou')">✖ Reprovar</button>
+                                    <button class="btn-small btn-pass" onclick="avaliar('${f.firebaseId}', 'passou')">Aprovar</button>
+                                    <button class="btn-small btn-fail" onclick="avaliar('${f.firebaseId}', 'falhou')">Reprovar</button>
                                     <button class="btn-small btn-del" onclick="excluir('${f.firebaseId}')">Excluir</button>
                                 </div>
                             </div>
@@ -282,30 +258,29 @@
                 container.innerHTML += html + '</div></section>';
             });
         } else {
-            // Histórico de Aprovados/Reprovados
-            const lista = (currentTab === 'aprovados' ? globalData.aprovados : globalData.reprovados)
-                          .sort((a,b) => a.nome.localeCompare(b.nome));
-            let h = `<table class="history-table"><thead><tr><th>Nome</th><th>Matrícula</th><th>Turno</th><th>Data Avaliação</th><th>Avaliador</th></tr></thead><tbody>`;
+            const lista = (currentTab === 'aprovados' ? globalData.aprovados : globalData.reprovados).sort((a,b) => a.nome.localeCompare(b.nome));
+            let table = `<table class="history-table"><thead><tr><th>Nome</th><th>Matrícula</th><th>Turno</th><th>Data</th><th>Avaliador</th></tr></thead><tbody>`;
             lista.forEach(f => {
-                h += `<tr><td>${f.nome}</td><td>${f.matricula}</td><td>${f.turno}</td><td>${f.dataAvaliacao || '--'}</td><td>${f.avaliadoPor || '--'}</td></tr>`;
+                table += `<tr><td>${f.nome}</td><td>${f.matricula}</td><td>${f.turno}</td><td>${f.dataAvaliacao || '--'}</td><td>${f.avaliadoPor || '--'}</td></tr>`;
             });
-            container.innerHTML = h + `</tbody></table>`;
+            container.innerHTML = table + `</tbody></table>`;
         }
         renderStats();
     }
 
-    // --- FIREBASE OPS ---
+    // --- FIREBASE CRUD ---
     document.getElementById('btnSalvarFirebase').onclick = async () => {
         const id = document.getElementById('editDocId').value;
         const dIni = document.getElementById('dataInicio').value;
-        if(!dIni || !document.getElementById('nome').value) return alert("Preencha os campos!");
+        const nome = document.getElementById('nome').value;
+        if(!dIni || !nome) return alert("Preencha o Nome e a Data de Início!");
 
         const d = new Date(dIni + 'T00:00:00');
         const f45 = new Date(d); f45.setDate(d.getDate() + 45);
         const f90 = new Date(d); f90.setDate(d.getDate() + 90);
 
         const obj = {
-            nome: document.getElementById('nome').value,
+            nome,
             matricula: document.getElementById('matricula').value,
             turno: document.getElementById('turno').value,
             posto: document.getElementById('posto').value,
@@ -332,7 +307,7 @@
         });
     };
 
-    window.excluir = async (id) => { if(confirm("Excluir?")) await deleteDoc(doc(db, "contratos", id)); };
+    window.excluir = async (id) => { if(confirm("Deseja excluir?")) await deleteDoc(doc(db, "contratos", id)); };
 
     window.editar = (id) => {
         const f = [...globalData.funcionarios, ...globalData.aprovados, ...globalData.reprovados].find(i => i.firebaseId === id);
@@ -345,31 +320,68 @@
         document.getElementById('formSection').style.display = 'block';
     };
 
+    window.toggleForm = () => {
+        const fs = document.getElementById('formSection');
+        fs.style.display = fs.style.display === 'block' ? 'none' : 'block';
+        if(fs.style.display === 'none') document.getElementById('editDocId').value = '';
+    };
+
     function renderStats() {
         document.getElementById('statsBar').innerHTML = `
             <div class="stat-card"><strong>Ativos</strong><br>${globalData.funcionarios.length}</div>
             <div class="stat-card"><strong>Aprovados</strong><br>${globalData.aprovados.length}</div>
-            <div class="stat-card"><strong>Reprovados</strong><br>${globalData.reprovados.length}</div>
-        `;
+            <div class="stat-card"><strong>Reprovados</strong><br>${globalData.reprovados.length}</div>`;
     }
 
+    // --- TAB NAVIGATION ---
     document.getElementById('tabAtivosBtn').onclick = (e) => { currentTab = 'ativos'; updateTabs(e.target); };
     document.getElementById('tabAprovadosBtn').onclick = (e) => { currentTab = 'aprovados'; updateTabs(e.target); };
     document.getElementById('tabReprovadosBtn').onclick = (e) => { currentTab = 'reprovados'; updateTabs(e.target); };
-
     function updateTabs(btn) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         renderizarTudo();
     }
 
+    // --- PDF COM DETALHAMENTO DE DIAS ---
     document.getElementById('btnGerarPDF').onclick = () => {
         const { jsPDF } = window.jspdf;
         const docPDF = new jsPDF('l', 'mm', 'a4');
-        const rows = globalData.funcionarios.map(f => [f.nome, f.matricula, f.turno, formatBR(f.dataInicio), formatBR(f.data45), formatBR(f.data90), f.posto]);
-        docPDF.text("Controle de Contratos - Quântica", 14, 15);
-        docPDF.autoTable({ head: [['Nome', 'Mat.', 'Turno', 'Início', '45d', '90d', 'Posto']], body: rows, startY: 20 });
-        docPDF.save(`Relatorio_${new Date().toLocaleDateString('pt-BR')}.pdf`);
+        
+        const ativos = globalData.funcionarios.sort((a,b) => {
+            if(a.turno !== b.turno) return a.turno.localeCompare(b.turno);
+            return a.nome.localeCompare(b.nome);
+        });
+
+        const rows = ativos.map(f => {
+            const d45 = calcularDias(f.data45);
+            const d90 = calcularDias(f.data90);
+            return [
+                f.nome, f.matricula, f.turno, formatBR(f.dataInicio),
+                `${formatBR(f.data45)}\n(${d45 < 0 ? 'Concluído' : 'Faltam ' + d45 + 'd'})`,
+                `${formatBR(f.data90)}\n(${d90 < 0 ? 'VENCIDO' : 'Faltam ' + d90 + 'd'})`,
+                f.posto
+            ];
+        });
+
+        docPDF.setFontSize(16);
+        docPDF.text("CONTROLE DE CONTRATOS 45/90 DIAS - QUÂNTICA", 14, 15);
+        docPDF.setFontSize(10);
+        docPDF.text(`Relatório emitido em: ${new Date().toLocaleString('pt-BR')}`, 14, 22);
+
+        docPDF.autoTable({
+            head: [['Funcionário', 'Mat.', 'Turno', 'Início', 'Prazo 45d', 'Prazo 90d', 'Posto']],
+            body: rows,
+            startY: 28,
+            theme: 'grid',
+            headStyles: { fillColor: [44, 62, 80] },
+            didParseCell: function(data) {
+                if (data.section === 'body' && data.column.index === 5 && data.cell.raw.includes('VENCIDO')) {
+                    data.cell.styles.textColor = [231, 76, 60];
+                }
+            }
+        });
+        docPDF.save(`Auditoria_Contratos_${new Date().toLocaleDateString('pt-BR')}.pdf`);
     };
 </script>
 </body>
