@@ -1,568 +1,314 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FortGuard - Sistema de Escalas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Contratos 45/90 - Quântica</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --primary: #1a252f; --accent: #2980b9; --bg: #f8fafc;
-            --text: #1e293b; --white: #ffffff; --danger: #e74c3c; --success: #10b981;
-            --warning: #f59e0b; --info: #3b82f6; --muted: #64748b;
+            --primary: #2c3e50; --secondary: #34495e; --success: #27ae60;
+            --warning: #f1c40f; --danger: #e74c3c; --expired: #2c3e50;
+            --light: #f8f9fa; --border: #dee2e6;
         }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: #e9ecef; margin: 0; padding: 20px; color: var(--primary); }
+        .container { max-width: 1200px; margin: 0 auto; }
 
-        * { box-sizing: border-box; }
-        body { 
-            font-family: system-ui, -apple-system, sans-serif; 
-            margin: 0; background: linear-gradient(135deg, var(--bg) 0%, #e2e8f0 100%); 
-            color: var(--text); padding-bottom: 90px; min-height: 100vh;
+        #authSection {
+            max-width: 400px; margin: 80px auto; background: white; padding: 30px;
+            border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center;
         }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px 15px; }
+        .login-field { margin-bottom: 15px; text-align: left; }
+        .login-field label { display: block; margin-bottom: 5px; font-weight: 600; }
 
-        .header { 
-            background: var(--white); border-radius: 20px; padding: 20px; margin-bottom: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px;
-            position: relative; overflow: hidden;
+        header { 
+            background: white; padding: 20px; border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--accent), var(--success)); }
-        .header-date { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
-        .date-nav-btn { width: 44px; height: 44px; border-radius: 12px; border: none; background: var(--accent); color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .date-nav-btn:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(41,128,185,0.4); }
-        .date-nav-btn:active { transform: scale(0.98); }
-
-        .panel { 
-            background: var(--white); border-radius: 16px; padding: 20px; margin-bottom: 20px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid rgba(255,255,255,0.5);
-            transition: all 0.3s ease;
-        }
-        .panel:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
-        .panel h3 { 
-            margin: 0 0 15px 0; color: var(--accent); font-size: 1.1rem; font-weight: 600; 
-            display: flex; align-items: center; gap: 8px;
-        }
-        .panel.vazio::after { content: 'Nenhum funcionário encontrado'; color: var(--muted); font-style: italic; text-align: center; display: block; padding: 20px; }
-
-        .card-func { 
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); 
-            border-left: 4px solid var(--accent); padding: 16px; margin: 12px 0; border-radius: 12px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: all 0.2s; cursor: pointer;
-            position: relative; overflow: hidden;
-        }
-        .card-func::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: inherit; }
-        .card-func:hover { transform: translateX(4px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
-        .card-func.falta { border-left-color: var(--danger); background: #fef2f2; }
-        .card-func.recolhido { border-left-color: var(--success); background: #f0fdf4; }
-        
-        .func-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-        .func-name { font-weight: 700; font-size: 1rem; color: var(--primary); }
-        .badge { font-size: 11px; background: var(--accent); color: white; padding: 4px 8px; border-radius: 20px; font-weight: 600; }
-        .func-details { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 12px; }
-        .status-select { 
-            margin-top: 12px; width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 10px; 
-            background: white; font-size: 14px; transition: all 0.2s;
-        }
-        .status-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(41,128,185,0.1); }
-
-        .form-group { margin-bottom: 16px; }
-        label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
-        input, select { 
-            width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px; 
-            font-size: 15px; transition: all 0.2s; background: white;
-        }
-        input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(41,128,185,0.1); }
-        
-        .btn { 
-            width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: 600; 
-            cursor: pointer; font-size: 15px; transition: all 0.2s; position: relative; overflow: hidden;
-        }
-        .btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transition: left 0.5s; }
-        .btn:hover::before { left: 100%; }
-        .btn:active { transform: scale(0.98); }
-        .btn-success { background: linear-gradient(135deg, var(--success), #059669); color: white; box-shadow: 0 4px 15px rgba(16,185,129,0.3); }
-        .btn-danger { background: linear-gradient(135deg, var(--danger), #dc2626); color: white; box-shadow: 0 4px 15px rgba(231,76,60,0.3); }
-        .btn-secondary { background: linear-gradient(135deg, #6b7280, #4b5563); color: white; }
-        .btn-share { background: linear-gradient(135deg, #25d366, #128c7e); color: white; box-shadow: 0 4px 15px rgba(37,211,102,0.4); }
-        .btn-edit { background: var(--accent); color: white; padding: 8px 16px; width: auto; font-size: 13px; margin-left: 8px; }
-
-        .flex-row { display: flex; gap: 12px; }
-        .flex-row .form-group { flex: 1; }
-        .hidden { display: none !important; }
-        .item-gestao { 
-            display: flex; justify-content: space-between; align-items: center; padding: 14px; 
-            border-bottom: 1px solid #f1f5f9; font-size: 14px; transition: background 0.2s;
-        }
-        .item-gestao:hover { background: #f8fafc; border-radius: 8px; }
-        .item-gestao:last-child { border-bottom: none; }
-
-        .bottom-nav {
-            position: fixed; bottom: 0; width: 100%; background: rgba(26,37,47,0.95); 
-            backdrop-filter: blur(20px); display: flex; justify-content: space-around; 
-            padding: 12px 0; z-index: 1000; box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-        }
-        .nav-item { 
-            color: #94a3b8; background: none; border: none; font-size: 12px; cursor: pointer; 
-            text-align: center; padding: 8px; border-radius: 12px; transition: all 0.2s;
-            display: flex; flex-direction: column; align-items: center; gap: 4px;
-        }
-        .nav-item.active { color: var(--accent); background: rgba(41,128,185,0.2); font-weight: 600; transform: scale(1.05); }
-        .nav-icon { font-size: 20px; }
-
-        .stats-bar { display: flex; gap: 10px; margin-bottom: 20px; }
-        .stat-card { 
-            flex: 1; background: var(--white); padding: 16px; border-radius: 12px; 
-            text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        }
-        .stat-number { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
-        .stat-label { font-size: 12px; color: var(--muted); }
-
-        @media print {
-            .bottom-nav, .header-date, .btn, .stats-bar, .status-select { display: none !important; }
-            .container { max-width: none; padding: 20px; }
-        }
-
-        @media (max-width: 480px) {
-            .container { padding: 15px 10px; }
-            .header { padding: 16px; }
-        }
+        .stats-bar { display: flex; gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 15px; border-radius: 8px; flex: 1; text-align: center; border-bottom: 4px solid var(--primary); }
+        .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
+        .tab-btn { padding: 10px 25px; border: none; background: #ddd; cursor: pointer; border-radius: 5px 5px 0 0; font-weight: 600; }
+        .tab-btn.active { background: white; border-bottom: 2px solid var(--success); }
+        .form-section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: none; border: 1px solid var(--border); }
+        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .btn-add { background: var(--success); color: white; }
+        .btn-pdf { background: var(--primary); color: white; }
+        .btn-save { background: var(--success); color: white; margin-top: 15px; width: 100%; }
+        .btn-reg { background: #34495e; color: white; margin-top: 10px; width: 100%; }
+        .btn-cancel { background: var(--danger); color: white; }
+        .btn-logout { background: #666; color: white; font-size: 0.8rem; }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        .card { background: white; border-radius: 8px; padding: 15px; border-top: 8px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
+        .card.status-green { border-top-color: var(--success); }
+        .card.status-yellow { border-top-color: var(--warning); }
+        .card.status-red { border-top-color: var(--danger); }
+        .card.status-black { border-top-color: var(--expired); background: #f1f1f1; }
+        .actions { display: flex; gap: 5px; margin-top: 15px; flex-wrap: wrap; }
+        .btn-small { padding: 5px 10px; font-size: 0.8rem; border-radius: 3px; border: none; cursor: pointer; }
+        .btn-edit { background: #3498db; color: white; }
+        .btn-del { background: #e74c3c; color: white; }
+        .btn-pass { background: #27ae60; color: white; }
+        .btn-fail { background: #e67e22; color: white; }
+        .history-table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
+        .history-table th, .history-table td { padding: 12px; border: 1px solid var(--border); text-align: left; }
     </style>
 </head>
 <body>
 
-<div id="view-postos" class="container">
-    <div class="header">
-        <button class="date-nav-btn" onclick="mudarData(-1)" title="Dia anterior">←</button>
-        <div class="header-date" id="label-data"></div>
-        <button class="date-nav-btn" onclick="mudarData(1)" title="Próximo dia">→</button>
-    </div>
-
-    <div class="stats-bar">
-        <div class="stat-card">
-            <div class="stat-number" id="total-sup">0</div>
-            <div class="stat-label">Supervisores</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number" id="total-res">0</div>
-            <div class="stat-label">Reservas</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number" id="total-geral">0</div>
-            <div class="stat-label">Postos</div>
-        </div>
-    </div>
-
-    <div class="panel"><h3>👮 Supervisores</h3><div id="lista-sup"></div></div>
-    <div class="panel"><h3>💾 Reservas</h3><div id="lista-res"></div></div>
-    <div class="panel"><h3>🏢 Geral (Postos)</h3><div id="lista-geral"></div></div>
-    
-    <div style="display: flex; gap: 12px;">
-        <button class="btn btn-share" onclick="compartilharRelatorio()">📤 Compartilhar</button>
-        <button class="btn btn-secondary" onclick="window.print()">🖨️ PDF</button>
-    </div>
+<div id="authSection">
+    <h2>Acesso Quântica</h2>
+    <div class="login-field"><label>Usuário (Nome)</label><input type="text" id="loginEmail" placeholder="Ex: gustavo"></div>
+    <div class="login-field"><label>Senha (Mín. 6 dígitos)</label><input type="password" id="loginPassword" placeholder="******"></div>
+    <button class="btn btn-save" id="btnLogin">Entrar no Sistema</button>
+    <button class="btn btn-reg" id="btnRegistrar">Criar Nova Conta</button>
+    <p id="loginError" style="color:red; margin-top:10px; display:none; font-size:0.8rem;"></p>
 </div>
 
-<div id="view-add" class="container hidden">
-    <div class="panel">
-        <h3 id="form-title">➕ Adicionar Funcionário</h3>
-        <input type="hidden" id="edit-id">
-        <div class="form-group"><label>👤 Nome Completo</label><input type="text" id="f-nome" required></div>
-        <div class="flex-row">
-            <div class="form-group"><label>🆔 Matrícula</label><input type="text" id="f-matr"></div>
-            <div class="form-group"><label>🌞 Turno</label><select id="f-turno"><option>Dia</option><option>Noite</option></select></div>
+<div id="appContent" class="container" style="display: none;">
+    <header>
+        <div>
+            <h1>Controle de Contratos (Equipe)</h1>
+            <p id="userNameDisplay" style="font-weight: bold; color: var(--success); margin: 0;"></p>
         </div>
-        <div class="flex-row">
-            <div class="form-group"><label>🎖️ Cargo</label>
-                <select id="f-cargo">
-                    <option value="reserva">Reserva</option><option value="fiscal">Fiscal</option>
-                    <option value="inspetor">Inspetor</option><option value="lider">Líder</option>
-                    <option value="asp">ASP</option>
-                </select>
-            </div>
-            <div class="form-group"><label>📅 Escala</label>
-                <select id="f-escala">
-                    <option value="12x36">12x36</option><option value="2x1">2x1</option>
-                    <option value="4x2">4x2</option><option value="5x1">5x1</option>
-                    <option value="5x2">5x2 (Seg-Sex)</option><option value="6x1">6x1</option>
-                    <option value="6x2">6x2</option>
-                </select>
-            </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-add" onclick="toggleForm()">+ Novo Cadastro</button>
+            <button class="btn btn-pdf" id="btnGerarPDF">📄 Gerar Relatório PDF</button>
+            <button class="btn btn-logout" id="btnLogout">Sair</button>
         </div>
-        <div class="form-group"><label>📍 Posto</label><input type="text" id="f-posto" list="dl-postos" required></div>
-        <div class="form-group"><label>📊 Início da Escala</label><input type="date" id="f-inicio" required></div>
-        <div class="form-group"><label>📋 Status</label>
-            <select id="f-status">
-                <option value="Ativo">Ativo</option><option value="INSS">INSS</option>
-                <option value="Férias">Férias</option><option value="Afastado">Afastado</option>
-            </select>
-        </div>
-        <div style="display: flex; gap: 12px;">
-            <button class="btn btn-success" onclick="salvarFuncionario()" style="flex: 2;">💾 Salvar</button>
-            <button class="btn btn-secondary" onclick="resetForm()" style="flex: 1;">Cancelar</button>
-        </div>
+    </header>
+
+    <div class="stats-bar" id="statsBar"></div>
+    <div class="search-box" style="margin-bottom: 15px;"><input type="text" id="searchInput" placeholder="Buscar por nome ou matrícula..." style="max-width: 400px;"></div>
+
+    <div class="tabs">
+        <button class="tab-btn active" id="tabAtivosBtn">Ativos</button>
+        <button class="tab-btn" id="tabAprovadosBtn">Aprovados</button>
+        <button class="tab-btn" id="tabReprovadosBtn">Reprovados</button>
     </div>
 
-    <!-- === LISTA DE FUNCIONÁRIOS COM PESQUISA E FILTRO A-Z === -->
-    <div class="panel">
-        <h3>👥 Funcionários ( <span id="count-funcs">0</span> )</h3>
-        
-        <!-- Novo: Pesquisa + Filtro A-Z -->
-        <div style="display: flex; gap: 12px; margin-bottom: 15px; align-items: center;">
-            <input 
-                type="text" 
-                id="search-func" 
-                placeholder="🔎 Pesquisar por nome..." 
-                style="flex: 1; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px;">
-            
-            <select 
-                id="sort-func" 
-                style="padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; background: white; min-width: 160px;">
-                <option value="az">Nome A → Z</option>
-                <option value="za">Nome Z → A</option>
-            </select>
+    <section id="formSection" class="form-section">
+        <h2 id="formTitle">Cadastrar Funcionário</h2>
+        <input type="hidden" id="editDocId">
+        <div class="grid-form">
+            <div><label>Nome Completo</label><input type="text" id="nome" required></div>
+            <div><label>Matrícula</label><input type="number" id="matricula" required></div>
+            <div><label>Turno</label><select id="turno"><option value="Manhã">Manhã</option><option value="Tarde">Tarde</option><option value="Noite">Noite</option></select></div>
+            <div><label>Posto</label><input type="text" id="posto" required></div>
+            <div><label>Início do Contrato</label><input type="date" id="dataInicio" required></div>
         </div>
+        <button class="btn btn-save" id="btnSalvarFirebase">Salvar Registro no Banco</button>
+        <button class="btn btn-cancel" onclick="toggleForm()" style="margin-top:10px; width:100%">Cancelar</button>
+    </section>
 
-        <div id="lista-cadastrados"></div>
-    </div>
-    
-    <div class="panel">
-        <h3>🏪 Gestão de Postos</h3>
-        <div class="flex-row">
-            <input type="text" id="novo-posto-input" placeholder="Novo posto..." style="flex: 1;">
-            <button onclick="addPosto()" class="btn btn-success" style="width: 60px;">+</button>
-        </div>
-        <div id="lista-gestao-postos" style="margin-top: 15px; max-height: 200px; overflow-y: auto;"></div>
-    </div>
+    <main id="mainContent"></main>
 </div>
 
-<datalist id="dl-postos"></datalist>
+<script type="module">
+    import { auth, db } from './firebase-config.js';
+    import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-<div class="bottom-nav">
-    <button class="nav-item active" id="tab1" onclick="tab('postos')">
-        <div class="nav-icon">📋</div>Postos
-    </button>
-    <button class="nav-item" id="tab2" onclick="tab('add')">
-        <div class="nav-icon">➕</div>Add
-    </button>
-</div>
+    let currentTab = 'ativos';
+    let globalData = { funcionarios: [], aprovados: [], reprovados: [] };
 
-<script>
-    const postosPadrao = ["10º TABELIONATO", "COLÉGIO DOM FELICIANO", "COLÉGIO STELLA MARIS" /* ... resto igual ... */];
-    let db_funcs = JSON.parse(localStorage.getItem('fg_funcs')) || [];
-    let db_postos = JSON.parse(localStorage.getItem('fg_postos')) || postosPadrao;
-    let dataRef = new Date();
-    dataRef.setHours(0,0,0,0);
-    let statusCache = {}; // Cache para status dos funcionários
+    const formatarUsuario = (texto) => texto.includes('@') ? texto : `${texto.trim().toLowerCase()}@quantica.com`;
+    const formatBR = (dataISO) => dataISO ? dataISO.split('-').reverse().join('/') : '--';
 
-    // Inicialização melhorada
-    function initApp() {
-        if (db_funcs.length === 0) {
-            alert('Bem-vindo ao FortGuard! Cadastre os primeiros funcionários na aba "Add".');
-        }
-        tab('postos');
-    }
+    // --- LOGIN E REGISTRO ---
+    document.getElementById('btnLogin').onclick = async () => {
+        const user = formatarUsuario(document.getElementById('loginEmail').value);
+        const pass = document.getElementById('loginPassword').value;
+        try { await signInWithEmailAndPassword(auth, user, pass); } catch (e) { alert("Acesso negado."); }
+    };
 
-    function tab(v) {
-        ['view-postos', 'view-add'].forEach(view => {
-            document.getElementById(view).classList.toggle('hidden', view !== `view-${v}`);
-        });
-        ['tab1', 'tab2'].forEach((tab, i) => {
-            document.getElementById(tab).classList.toggle('active', (v === 'postos' && i === 0) || (v === 'add' && i === 1));
-        });
-        if(v === 'postos') renderEscala();
-        if(v === 'add') { 
-            renderCadastrados(); 
-            renderPostos(); 
-        }
-    }
+    document.getElementById('btnRegistrar').onclick = async () => {
+        const user = formatarUsuario(document.getElementById('loginEmail').value);
+        const pass = document.getElementById('loginPassword').value;
+        if(pass.length < 6) return alert("Mínimo 6 dígitos.");
+        try { await createUserWithEmailAndPassword(auth, user, pass); alert("Conta criada!"); } catch (e) { alert("Erro ao criar conta."); }
+    };
 
-    function estaDeServico(f, dataAlvo) {
-        if (!f.inicio) return false;
-        const inicio = new Date(f.inicio + "T00:00:00");
-        const alvo = new Date(dataAlvo);
-        alvo.setHours(0,0,0,0);
-        if (alvo < inicio) return false;
+    document.getElementById('btnLogout').onclick = () => signOut(auth);
 
-        const diffDays = Math.floor((alvo - inicio) / (1000 * 60 * 60 * 24));
-        switch(f.escala) {
-            case "12x36": return diffDays % 2 === 0;
-            case "2x1": return diffDays % 3 < 2;
-            case "4x2": return diffDays % 6 < 4;
-            case "5x1": return diffDays % 6 < 5;
-            case "5x2": const d = alvo.getDay(); return d !== 0 && d !== 6;
-            case "6x1": return diffDays % 7 < 6;
-            case "6x2": return diffDays % 8 < 6;
-            default: return true;
-        }
-    }
-
-    function saveStatus(nome, posto, cargo, status) {
-        const key = `${dataRef.toDateString()}_${nome}_${posto}`;
-        statusCache[key] = status;
-        localStorage.setItem('fg_status_cache', JSON.stringify(statusCache));
-    }
-
-    function loadStatus(nome, posto) {
-        const key = `${dataRef.toDateString()}_${nome}_${posto}`;
-        return statusCache[key] || '';
-    }
-
-    function renderEscala() {
-        document.getElementById('label-data').innerText = dataRef.toLocaleDateString('pt-BR', { 
-            weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' 
-        }).replace(/\bw/, l => l.toUpperCase());
-
-        const s = document.getElementById('lista-sup'), r = document.getElementById('lista-res'), g = document.getElementById('lista-geral');
-        s.innerHTML = ''; r.innerHTML = ''; g.innerHTML = '';
-
-        const funcsNoDia = db_funcs.filter(f => estaDeServico(f, dataRef));
-        const sups = [], res = [], geral = [];
-
-        funcsNoDia.sort((a,b) => a.posto.localeCompare(b.posto)).forEach(f => {
-            const status = loadStatus(f.nome, f.posto);
-            const cardClass = status === 'Falta' ? 'card-func falta' : 
-                             status === 'Recolhido' ? 'card-func recolhido' : 'card-func';
-            
-            const html = `<div class="${cardClass}" data-nome="${f.nome}" data-posto="${f.posto}" data-cargo="${f.cargo}">
-                <div class="func-header">
-                    <div class="func-name">${f.nome}</div>
-                    <span class="badge">${f.turno}</span>
-                </div>
-                <div class="func-details">
-                    <span>${f.posto}</span>
-                    <span>${f.escala}</span>
-                    <span>${f.status}</span>
-                </div>
-                <select class="status-select obs-plantao" onchange="saveStatus('${f.nome}', '${f.posto}', '${f.cargo}', this.value)">
-                    <option value="">Status...</option>
-                    <option value="Falta" ${status === 'Falta' ? 'selected' : ''}>🚫 Falta</option>
-                    <option value="Recolhido" ${status === 'Recolhido' ? 'selected' : ''}>✅ Recolhido</option>
-                    <option value="Suspenso" ${status === 'Suspenso' ? 'selected' : ''}>⏸️ Suspenso</option>
-                    <option value="Atestado" ${status === 'Atestado' ? 'selected' : ''}>📄 Atestado</option>
-                    ${f.cargo === 'reserva' ? `<option value="Cobertura" ${status === 'Cobertura' ? 'selected' : ''}>🛡️ Cobertura</option>` : ''}
-                </select>
-            </div>`;
-
-            if(f.cargo === 'fiscal' || f.cargo === 'inspetor') sups.push(html);
-            else if(f.cargo === 'reserva') res.push(html);
-            else geral.push(html);
-        });
-
-        s.innerHTML = sups.length ? sups.join('') : '';
-        r.innerHTML = res.length ? res.join('') : '';
-        g.innerHTML = geral.length ? geral.join('') : '';
-
-        // Atualizar contadores
-        document.getElementById('total-sup').textContent = sups.length;
-        document.getElementById('total-res').textContent = res.length;
-        document.getElementById('total-geral').textContent = geral.length;
-
-        // Carregar cache de status
-        const cache = JSON.parse(localStorage.getItem('fg_status_cache') || '{}');
-        statusCache = cache;
-    }
-
-    function renderPostos() {
-        const dl = document.getElementById('dl-postos'), list = document.getElementById('lista-gestao-postos');
-        dl.innerHTML = ''; list.innerHTML = '';
-        db_postos.sort().forEach(p => {
-            dl.innerHTML += `<option value="${p}">`;
-            list.innerHTML += `<div class="item-gestao">
-                <span>${p}</span>
-                <button onclick="delPosto('${p}')" style="color:var(--danger); background:none; border:none; font-weight:700; font-size:16px; padding:4px 8px;" title="Excluir">✕</button>
-            </div>`;
-        });
-    }
-
-    function addPosto() {
-        const p = document.getElementById('novo-posto-input').value.trim().toUpperCase();
-        if(p && !db_postos.includes(p)) {
-            db_postos.push(p);
-            localStorage.setItem('fg_postos', JSON.stringify(db_postos));
-            renderPostos();
-            document.getElementById('novo-posto-input').value = '';
-        } else if (p) {
-            alert('Posto já existe ou campo vazio!');
-        }
-    }
-
-    function delPosto(p) {
-        if(confirm(`Excluir "${p}"?`)) {
-            db_postos = db_postos.filter(x => x !== p);
-            localStorage.setItem('fg_postos', JSON.stringify(db_postos));
-            renderPostos();
-        }
-    }
-
-    async function compartilharRelatorio() {
-        let texto = `*FORTGUARD - ESCALA ${dataRef.toLocaleDateString('pt-BR', {weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'})}*
-
-`;
-        
-        document.querySelectorAll('#view-postos .panel').forEach(panel => {
-            const titulo = panel.querySelector('h3').innerText;
-            const cards = panel.querySelectorAll('.card-func');
-            if(cards.length > 0) {
-                texto += `*${titulo.toUpperCase()} (${cards.length})*
-`;
-                cards.forEach(c => {
-                    const obs = c.querySelector('.obs-plantao').value;
-                    const nome = c.dataset.nome;
-                    const posto = c.dataset.posto;
-                    texto += `• ${nome} (${posto})${obs ? ` → ${obs}` : ''}
-`;
-                });
-                texto += `
-`;
-            }
-        });
-        
-        if (navigator.share) {
-            await navigator.share({ title: 'FortGuard - Escala', text: texto });
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('appContent').style.display = 'block';
+            document.getElementById('userNameDisplay').innerText = `Logado: ${user.email.split('@')[0]}`;
+            ouvirDados();
         } else {
-            await navigator.clipboard.writeText(texto);
-            alert('📋 Relatório copiado! Cole no WhatsApp/Telegram.');
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('appContent').style.display = 'none';
         }
+    });
+
+    function ouvirDados() {
+        const q = query(collection(db, "contratos"), orderBy("nome", "asc"));
+        onSnapshot(q, (snapshot) => {
+            globalData = { funcionarios: [], aprovados: [], reprovados: [] };
+            snapshot.forEach((doc) => {
+                const item = { ...doc.data(), firebaseId: doc.id };
+                if (item.status === 'aprovado') globalData.aprovados.push(item);
+                else if (item.status === 'reprovado') globalData.reprovados.push(item);
+                else globalData.funcionarios.push(item);
+            });
+            renderizarTudo();
+        });
     }
 
-    function mudarData(d) {
-        dataRef.setDate(dataRef.getDate() + d);
-        renderEscala();
-    }
+    document.getElementById('btnSalvarFirebase').onclick = async () => {
+        const docId = document.getElementById('editDocId').value;
+        const dataInicioVal = document.getElementById('dataInicio').value;
+        if(!dataInicioVal || !document.getElementById('nome').value) return alert("Preencha Nome e Data de Início!");
 
-    function salvarFuncionario() {
-        const inputs = ['f-nome', 'f-posto', 'f-inicio'];
-        const f = {
-            id: document.getElementById('edit-id').value || Date.now().toString(),
-            nome: document.getElementById('f-nome').value.trim(),
-            matr: document.getElementById('f-matr').value,
-            turno: document.getElementById('f-turno').value,
-            cargo: document.getElementById('f-cargo').value,
-            escala: document.getElementById('f-escala').value,
-            posto: document.getElementById('f-posto').value.trim().toUpperCase(),
-            inicio: document.getElementById('f-inicio').value,
-            status: document.getElementById('f-status').value
+        const dInicio = new Date(dataInicioVal + 'T00:00:00');
+        const d45 = new Date(dInicio); d45.setDate(dInicio.getDate() + 44);
+        const d90 = new Date(dInicio); d90.setDate(dInicio.getDate() + 89);
+
+        const func = {
+            nome: document.getElementById('nome').value,
+            matricula: document.getElementById('matricula').value,
+            turno: document.getElementById('turno').value,
+            posto: document.getElementById('posto').value,
+            dataInicio: dataInicioVal,
+            data45: d45.toISOString().split('T')[0],
+            data90: d90.toISOString().split('T')[0],
+            dataFim: d90.toISOString().split('T')[0], // Base para os cards
+            status: 'ativo',
+            editadoPor: auth.currentUser.email.split('@')[0]
         };
 
-        if (!f.nome || !f.posto || !f.inicio) {
-            alert('❌ Preencha Nome, Posto e Início da Escala!');
-            return;
-        }
+        try {
+            if (docId) await updateDoc(doc(db, "contratos", docId), func);
+            else await addDoc(collection(db, "contratos"), func);
+            toggleForm();
+        } catch (e) { alert("Erro ao salvar."); }
+    };
 
-        const idx = db_funcs.findIndex(x => x.id === f.id);
-        if(idx > -1) db_funcs[idx] = f;
-        else db_funcs.push(f);
-        
-        localStorage.setItem('fg_funcs', JSON.stringify(db_funcs));
-        resetForm();
-        tab('postos');
-        alert('✅ Funcionário salvo com sucesso!');
+    window.toggleForm = () => {
+        const fs = document.getElementById('formSection');
+        fs.style.display = fs.style.display === 'block' ? 'none' : 'block';
+        if(fs.style.display === 'none') document.getElementById('editDocId').value = '';
+    };
+
+    window.avaliar = async (id, acao) => {
+        const status = acao === 'passou' ? 'aprovado' : 'reprovado';
+        await updateDoc(doc(db, "contratos", id), { 
+            status: status, 
+            dataAvaliacao: new Date().toLocaleDateString('pt-BR'),
+            avaliadoPor: auth.currentUser.email.split('@')[0]
+        });
+    };
+
+    window.excluir = async (id) => { if(confirm("Excluir?")) await deleteDoc(doc(db, "contratos", id)); };
+
+    window.editar = (id) => {
+        const f = [...globalData.funcionarios, ...globalData.aprovados, ...globalData.reprovados].find(i => i.firebaseId === id);
+        document.getElementById('nome').value = f.nome;
+        document.getElementById('matricula').value = f.matricula;
+        document.getElementById('turno').value = f.turno;
+        document.getElementById('posto').value = f.posto;
+        document.getElementById('dataInicio').value = f.dataInicio;
+        document.getElementById('editDocId').value = f.firebaseId;
+        document.getElementById('formSection').style.display = 'block';
+    };
+
+    function calcularDias(dataISO) {
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        const fim = new Date(dataISO + 'T00:00:00');
+        return Math.ceil((fim - hoje) / (1000 * 60 * 60 * 24));
     }
 
-    // === NOVA VERSÃO DO RENDER COM PESQUISA + FILTRO A-Z ===
-    function renderCadastrados() {
-        const lista = document.getElementById('lista-cadastrados');
-        const count = document.getElementById('count-funcs');
+    function renderizarTudo() {
+        const container = document.getElementById('mainContent');
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        container.innerHTML = '';
 
-        let filtered = [...db_funcs];
-
-        // === PESQUISA POR NOME ===
-        const searchInput = document.getElementById('search-func');
-        const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
-        if (searchTerm) {
-            filtered = filtered.filter(f => 
-                f.nome.toLowerCase().includes(searchTerm)
-            );
-        }
-
-        // === FILTRO ORDENAR A-Z / Z-A ===
-        const sortSelect = document.getElementById('sort-func');
-        const sortMode = sortSelect ? sortSelect.value : 'az';
-
-        filtered.sort((a, b) => {
-            const nameA = a.nome.toLowerCase();
-            const nameB = b.nome.toLowerCase();
-            if (sortMode === 'az') {
-                return nameA.localeCompare(nameB, 'pt-BR');
-            } else {
-                return nameB.localeCompare(nameA, 'pt-BR');
-            }
-        });
-
-        // Renderiza lista
-        if (filtered.length === 0) {
-            lista.innerHTML = `<div style="padding:20px; text-align:center; color:var(--muted); font-style:italic;">
-                Nenhum funcionário encontrado
-            </div>`;
+        if(currentTab === 'ativos') {
+            ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
+                const filtrados = globalData.funcionarios.filter(f => f.turno === turno && (f.nome.toLowerCase().includes(search) || f.matricula.includes(search)));
+                let html = `<section style="margin-top:20px;"><h2>${turno} (${filtrados.length})</h2><div class="cards-grid">`;
+                filtrados.forEach(f => {
+                    const dias90 = calcularDias(f.data90);
+                    let statusClass = dias90 < 0 ? 'status-black' : dias90 < 7 ? 'status-red' : dias90 <= 15 ? 'status-yellow' : 'status-green';
+                    html += `<div class="card ${statusClass}">
+                        <h3>${f.nome}</h3>
+                        <p>Matrícula: ${f.matricula}</p>
+                        <p>45 Dias: ${formatBR(f.data45)}</p>
+                        <p>90 Dias: ${formatBR(f.data90)}</p>
+                        <p><strong>Faltam: ${dias90} dias (90 dias)</strong></p>
+                        <div class="actions">
+                            <button class="btn-small btn-edit" onclick="editar('${f.firebaseId}')">Editar</button>
+                            <button class="btn-small btn-pass" onclick="avaliar('${f.firebaseId}', 'passou')">✔</button>
+                            <button class="btn-small btn-fail" onclick="avaliar('${f.firebaseId}', 'falhou')">✖</button>
+                            <button class="btn-small btn-del" onclick="excluir('${f.firebaseId}')">Excluir</button>
+                        </div>
+                    </div>`;
+                });
+                container.innerHTML += html + '</div></section>';
+            });
         } else {
-            lista.innerHTML = filtered.map(f => `
-                <div class="item-gestao">
-                    <div>
-                        <strong>${f.nome}</strong><br>
-                        <small style="color:var(--muted);">${f.posto} • ${f.cargo} • ${f.turno}</small>
-                    </div>
-                    <div>
-                        <button class="btn-edit" onclick="editarFunc('${f.id}')" title="Editar">✏️</button>
-                        <button class="btn-edit" style="background:var(--danger)" onclick="excluirFunc('${f.id}')" title="Excluir">🗑️</button>
-                    </div>
-                </div>
-            `).join('');
+            const lista = currentTab === 'aprovados' ? globalData.aprovados : globalData.reprovados;
+            let html = `<table class="history-table"><thead><tr><th>Nome</th><th>Matrícula</th><th>Início</th><th>90 Dias</th><th>Avaliador</th></tr></thead><tbody>`;
+            lista.forEach(f => {
+                html += `<tr><td>${f.nome}</td><td>${f.matricula}</td><td>${formatBR(f.dataInicio)}</td><td>${formatBR(f.data90)}</td><td>${f.avaliadoPor || '--'}</td></tr>`;
+            });
+            container.innerHTML = html + `</tbody></table>`;
         }
-
-        count.textContent = filtered.length;
+        renderStats();
     }
 
-    function editarFunc(id) {
-        const f = db_funcs.find(x => x.id == id);
-        if (!f) return alert('Funcionário não encontrado!');
-        
-        document.getElementById('edit-id').value = f.id;
-        document.getElementById('f-nome').value = f.nome;
-        document.getElementById('f-matr').value = f.matr || '';
-        document.getElementById('f-posto').value = f.posto;
-        document.getElementById('f-inicio').value = f.inicio;
-        document.getElementById('f-escala').value = f.escala;
-        document.getElementById('f-cargo').value = f.cargo;
-        document.getElementById('f-turno').value = f.turno;
-        document.getElementById('f-status').value = f.status;
-        document.getElementById('form-title').innerText = `✏️ Editando ${f.nome}`;
+    function renderStats() {
+        document.getElementById('statsBar').innerHTML = `
+            <div class="stat-card"><strong>Ativos</strong><br>${globalData.funcionarios.length}</div>
+            <div class="stat-card"><strong>Aprovados</strong><br>${globalData.aprovados.length}</div>
+        `;
     }
 
-    function excluirFunc(id) {
-        if(confirm('Tem certeza que deseja excluir este funcionário?')) {
-            db_funcs = db_funcs.filter(x => x.id != id);
-            localStorage.setItem('fg_funcs', JSON.stringify(db_funcs));
-            renderCadastrados(); // atualiza com filtro atual
-        }
+    document.getElementById('tabAtivosBtn').onclick = (e) => { currentTab = 'ativos'; updateTabs(e.target); };
+    document.getElementById('tabAprovadosBtn').onclick = (e) => { currentTab = 'aprovados'; updateTabs(e.target); };
+    document.getElementById('tabReprovadosBtn').onclick = (e) => { currentTab = 'reprovados'; updateTabs(e.target); };
+
+    function updateTabs(btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderizarTudo();
     }
 
-    function resetForm() {
-        document.getElementById('edit-id').value = '';
-        document.querySelectorAll('#view-add input, #view-add select').forEach(i => i.value = '');
-        document.getElementById('form-title').innerText = '➕ Adicionar Funcionário';
-    }
-
-    // === SETUP DOS EVENTOS DE PESQUISA E FILTRO (executado uma única vez) ===
-    function setupFuncFilters() {
-        const searchInput = document.getElementById('search-func');
-        const sortSelect = document.getElementById('sort-func');
-
-        if (!searchInput || !sortSelect) return;
-
-        let timeout;
-        searchInput.addEventListener('input', () => {
-            clearTimeout(timeout);
-            timeout = setTimeout(renderCadastrados, 250);
+    document.getElementById('btnGerarPDF').onclick = () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        const rows = globalData.funcionarios.map(f => {
+            const d45 = calcularDias(f.data45);
+            const d90 = calcularDias(f.data90);
+            return [
+                f.nome,
+                f.matricula,
+                formatBR(f.dataInicio),
+                `${formatBR(f.data45)} (${d45} dias)`,
+                `${formatBR(f.data90)} (${d90} dias)`,
+                f.posto
+            ];
         });
-
-        sortSelect.addEventListener('change', renderCadastrados);
-    }
-
-    // Inicializar app
-    statusCache = JSON.parse(localStorage.getItem('fg_status_cache') || '{}');
-    renderEscala();
-    renderPostos();
-    renderCadastrados();
-    setupFuncFilters();   // ← Ativa a pesquisa e o filtro A-Z
-    initApp();
+        doc.setFontSize(14);
+        doc.text("AUDITORIA DE CONTRATOS 45/90 DIAS - QUÂNTICA", 14, 15);
+        doc.autoTable({ 
+            head: [['Funcionário', 'Matr.', 'Início', 'Prazo 45 Dias (Faltam)', 'Prazo 90 Dias (Faltam)', 'Posto']], 
+            body: rows, 
+            startY: 25,
+            theme: 'grid'
+        });
+        doc.save(`Relatorio_Auditoria_${new Date().toLocaleDateString('pt-BR')}.pdf`);
+    };
 </script>
 </body>
 </html>
