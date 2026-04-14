@@ -1,775 +1,426 @@
 <!DOCTYPE html>
-
 <html lang="pt-br">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Controle de Contratos 45/90 - Quântica</title>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
     
-
     <style>
-
         :root {
-
             --primary: #2c3e50; --secondary: #34495e; --success: #27ae60;
-
             --warning: #f1c40f; --danger: #e74c3c; --expired: #2c3e50;
-
             --light: #f8f9fa; --border: #dee2e6;
-
         }
-
         * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-
         body { background-color: #e9ecef; margin: 0; padding: 20px; color: var(--primary); }
-
         .container { max-width: 1200px; margin: 0 auto; }
 
-
-
         /* Login */
-
         #authSection {
-
             max-width: 400px; margin: 80px auto; background: white; padding: 30px;
-
             border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center;
-
         }
-
         .login-field { margin-bottom: 15px; text-align: left; }
-
         .login-field label { display: block; margin-bottom: 5px; font-weight: 600; }
 
-
-
         header { 
-
             background: white; padding: 20px; border-radius: 8px; 
-
             box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px;
-
             display: flex; justify-content: space-between; align-items: center;
-
         }
-
-
 
         /* Stats e Tabs */
-
         .stats-bar { display: flex; gap: 15px; margin-bottom: 20px; }
-
         .stat-card { background: white; padding: 15px; border-radius: 8px; flex: 1; text-align: center; border-bottom: 4px solid var(--primary); }
-
         .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
-
         .tab-btn { padding: 10px 25px; border: none; background: #ddd; cursor: pointer; border-radius: 5px 5px 0 0; font-weight: 600; }
-
         .tab-btn.active { background: white; border-bottom: 2px solid var(--success); }
 
-
+        /* Pesquisa e Filtros */
+        .search-container {
+            background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;
+            display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .search-group { display: flex; flex: 2; min-width: 250px; }
+        .search-group input { border-radius: 4px 0 0 4px; border-right: none; }
+        .btn-search { 
+            background: var(--primary); color: white; border: none; 
+            padding: 0 15px; border-radius: 0 4px 4px 0; cursor: pointer;
+        }
+        .filter-group { display: flex; gap: 10px; flex: 3; min-width: 300px; }
+        .filter-group select { flex: 1; }
 
         /* Form */
-
         .form-section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: none; border: 1px solid var(--border); }
-
         .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-
         input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; }
 
-
-
         /* Botões */
-
         .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; transition: 0.3s; }
-
         .btn-add { background: var(--success); color: white; }
-
         .btn-pdf { background: var(--primary); color: white; }
-
         .btn-save { background: var(--success); color: white; margin-top: 15px; width: 100%; }
-
         .btn-logout { background: #666; color: white; font-size: 0.8rem; }
-
         .btn-small { padding: 6px 12px; font-size: 0.8rem; border-radius: 3px; border: none; cursor: pointer; }
-
         .btn-edit { background: #3498db; color: white; }
-
         .btn-del { background: #e74c3c; color: white; }
-
         .btn-pass { background: var(--success); color: white; }
-
         .btn-fail { background: #e67e22; color: white; }
 
-
-
-        /* CARDS EXPANSÍVEIS E STATUS */
-
+        /* CARDS */
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; align-items: start; }
-
         .card { 
-
             background: white; border-radius: 8px; padding: 15px; 
-
             border-top: 8px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
-
             cursor: pointer; overflow: hidden; transition: all 0.3s ease;
-
             max-height: 58px; 
-
         }
-
         .card.expanded { max-height: 500px; }
-
         .card h3 { margin: 0; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
-
         .card h3::after { content: '▼'; font-size: 0.7rem; margin-left: auto; transition: 0.3s; color: #999; }
-
         .card.expanded h3::after { transform: rotate(180deg); }
 
-
-
         .status-dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
-
         .status-green .status-dot { background-color: var(--success); }
-
         .status-yellow .status-dot { background-color: var(--warning); }
-
         .status-red .status-dot { background-color: var(--danger); }
-
         .status-black .status-dot { background-color: #000; }
 
-
-
         .atencao-icon { color: var(--danger); font-weight: 800; font-size: 0.7rem; animation: piscar 1s infinite; margin-left: 5px; }
-
         @keyframes piscar { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
 
-
-
         .card-body { opacity: 0; transition: 0.3s; padding-top: 15px; pointer-events: none; font-size: 0.9rem; }
-
         .card.expanded .card-body { opacity: 1; pointer-events: auto; }
-
         .card-info-box { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-top: 10px; border-left: 4px solid #ddd; }
-
-
-
         .actions { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; border-top: 1px solid #eee; padding-top: 10px; }
 
-
-
-        /* Seções de Turno */
-
         .turno-section { margin-bottom: 35px; }
-
         .turno-title { border-bottom: 2px solid var(--secondary); padding-bottom: 5px; margin-bottom: 15px; color: var(--secondary); font-size: 1.1rem; }
-
-        
-
-        /* Tabelas */
-
         .history-table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; font-size: 0.9rem; }
-
         .history-table th, .history-table td { padding: 12px; border: 1px solid var(--border); text-align: left; }
-
     </style>
-
 </head>
-
 <body>
 
-
-
 <div id="authSection">
-
     <h2>Acesso Quântica</h2>
-
     <div class="login-field"><label>Usuário</label><input type="text" id="loginEmail" placeholder="Seu nome"></div>
-
     <div class="login-field"><label>Senha</label><input type="password" id="loginPassword" placeholder="******"></div>
-
     <button class="btn btn-save" id="btnLogin">Entrar</button>
-
 </div>
-
-
 
 <div id="appContent" class="container" style="display: none;">
-
     <header>
-
         <div>
-
             <h1>Controle de Contratos</h1>
-
             <p id="userNameDisplay" style="font-weight: bold; color: var(--success); margin: 0; font-size: 0.8rem;"></p>
-
         </div>
-
         <div style="display: flex; gap: 10px;">
-
             <button class="btn btn-add" onclick="toggleForm()">+ Novo Cadastro</button>
-
             <button class="btn btn-pdf" id="btnGerarPDF">📄 Relatório PDF</button>
-
             <button class="btn btn-logout" id="btnLogout">Sair</button>
-
         </div>
-
     </header>
 
-
-
     <div class="stats-bar" id="statsBar"></div>
-
     
-
-    <div style="margin-bottom: 15px;">
-
-        <input type="text" id="searchInput" placeholder="Pesquisar por nome ou matrícula..." oninput="renderizarTudo()" style="max-width: 400px;">
-
+    <div class="search-container">
+        <div class="search-group">
+            <input type="text" id="searchInput" placeholder="Nome ou matrícula...">
+            <button class="btn-search" onclick="renderizarTudo()">🔍</button>
+        </div>
+        <div class="filter-group">
+            <select id="filterTurno" onchange="renderizarTudo()">
+                <option value="Todos">Todos os Turnos</option>
+                <option value="Manhã">Manhã</option>
+                <option value="Tarde">Tarde</option>
+                <option value="Noite">Noite</option>
+            </select>
+            <select id="filterPrazo" onchange="renderizarTudo()">
+                <option value="Todos">Todos os Prazos</option>
+                <option value="Vencidos">Vencidos</option>
+                <option value="Urgentes">Urgentes (< 7 dias)</option>
+                <option value="Atencao">Atenção (<= 15 dias)</option>
+            </select>
+            <button class="btn-small" onclick="limparFiltros()">Limpar</button>
+        </div>
     </div>
-
-
 
     <div class="tabs">
-
         <button class="tab-btn active" id="tabAtivosBtn">Ativos</button>
-
         <button class="tab-btn" id="tabAprovadosBtn">Aprovados</button>
-
         <button class="tab-btn" id="tabReprovadosBtn">Reprovados</button>
-
     </div>
 
-
-
     <section id="formSection" class="form-section">
-
         <h2 id="formTitle">Dados do Funcionário</h2>
-
         <input type="hidden" id="editDocId">
-
         <div class="grid-form">
-
             <div><label>Nome Completo</label><input type="text" id="nome"></div>
-
             <div><label>Matrícula</label><input type="number" id="matricula"></div>
-
             <div><label>Turno</label><select id="turno"><option value="Manhã">Manhã</option><option value="Tarde">Tarde</option><option value="Noite">Noite</option></select></div>
-
             <div><label>Posto</label><input type="text" id="posto"></div>
-
             <div><label>Início do Contrato</label><input type="date" id="dataInicio"></div>
-
         </div>
-
         <button class="btn btn-save" id="btnSalvarFirebase">Confirmar Registro</button>
-
         <button class="btn btn-cancel" onclick="toggleForm()" style="margin-top:10px; width:100%">Cancelar</button>
-
     </section>
 
-
-
     <main id="mainContent"></main>
-
 </div>
 
-
-
 <script type="module">
-
     import { auth, db } from './firebase-config.js';
-
     import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
     import { collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-
-
     let currentTab = 'ativos';
-
     let globalData = { funcionarios: [], aprovados: [], reprovados: [] };
 
-
-
     const formatarUsuario = (t) => t.includes('@') ? t : `${t.trim().toLowerCase()}@quantica.com`;
-
     const formatBR = (d) => d ? d.split('-').reverse().join('/') : '--';
 
-
-
-    // --- AUTENTICAÇÃO ---
-
+    // --- LOGIN ---
     document.getElementById('btnLogin').onclick = async () => {
-
         const u = formatarUsuario(document.getElementById('loginEmail').value);
-
         const p = document.getElementById('loginPassword').value;
-
         try { await signInWithEmailAndPassword(auth, u, p); } catch (e) { alert("Erro de acesso."); }
-
     };
-
     document.getElementById('btnLogout').onclick = () => signOut(auth);
 
-
-
     onAuthStateChanged(auth, (user) => {
-
         if (user) {
-
             document.getElementById('authSection').style.display = 'none';
-
             document.getElementById('appContent').style.display = 'block';
-
             document.getElementById('userNameDisplay').innerText = `OPERADOR: ${user.email.split('@')[0].toUpperCase()}`;
-
             ouvirDados();
-
         } else {
-
             document.getElementById('authSection').style.display = 'block';
-
             document.getElementById('appContent').style.display = 'none';
-
         }
-
     });
 
-
-
     function ouvirDados() {
-
         const q = query(collection(db, "contratos"), orderBy("nome", "asc"));
-
         onSnapshot(q, (snapshot) => {
-
             globalData = { funcionarios: [], aprovados: [], reprovados: [] };
-
             snapshot.forEach((d) => {
-
                 const item = { ...d.data(), firebaseId: d.id };
-
                 if (item.status === 'aprovado') globalData.aprovados.push(item);
-
                 else if (item.status === 'reprovado') globalData.reprovados.push(item);
-
                 else globalData.funcionarios.push(item);
-
             });
-
             renderizarTudo();
-
         });
-
     }
-
-
-
-    // --- CÁLCULOS ---
 
     function calcularDias(dataISO) {
-
         const hoje = new Date(); hoje.setHours(0,0,0,0);
-
         const fim = new Date(dataISO + 'T00:00:00');
-
         return Math.ceil((fim - hoje) / (1000 * 60 * 60 * 24));
-
     }
 
+    // --- FILTRAGEM E RENDERIZAÇÃO ---
+    window.limparFiltros = () => {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('filterTurno').value = 'Todos';
+        document.getElementById('filterPrazo').value = 'Todos';
+        renderizarTudo();
+    };
 
-
-    // --- RENDERIZAÇÃO ---
-
-    function renderizarTudo() {
-
+    window.renderizarTudo = function() {
         const container = document.getElementById('mainContent');
-
         const search = document.getElementById('searchInput').value.toLowerCase();
-
+        const fTurno = document.getElementById('filterTurno').value;
+        const fPrazo = document.getElementById('filterPrazo').value;
+        
         container.innerHTML = '';
 
-
-
         if(currentTab === 'ativos') {
+            const turnosParaRenderizar = fTurno === 'Todos' ? ['Manhã', 'Tarde', 'Noite'] : [fTurno];
 
-            ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
-
-                const filtrados = globalData.funcionarios
-
-                    .filter(f => f.turno === turno && (f.nome.toLowerCase().includes(search) || f.matricula.includes(search)))
-
-                    .sort((a, b) => a.nome.localeCompare(b.nome));
-
-
-
-                if(filtrados.length === 0 && search === "") return;
-
-
-
-                let html = `<section class="turno-section">
-
-                                <h2 class="turno-title">${turno} (${filtrados.length})</h2>
-
-                                <div class="cards-grid">`;
-
-                
-
-                filtrados.forEach(f => {
-
-                    const d45 = calcularDias(f.data45);
-
-                    const d90 = calcularDias(f.data90);
-
+            turnosParaRenderizar.forEach(turno => {
+                const filtrados = globalData.funcionarios.filter(f => {
+                    const matchBusca = f.nome.toLowerCase().includes(search) || f.matricula.includes(search);
+                    const matchTurno = f.turno === turno;
                     
+                    // Filtro de Prazo
+                    const d45 = calcularDias(f.data45);
+                    const d90 = calcularDias(f.data90);
+                    const menorPrazo = d45 >= 0 ? d45 : d90;
+                    
+                    let matchPrazo = true;
+                    if(fPrazo === 'Vencidos') matchPrazo = d90 < 0;
+                    else if(fPrazo === 'Urgentes') matchPrazo = (menorPrazo >= 0 && menorPrazo < 7);
+                    else if(fPrazo === 'Atencao') matchPrazo = (menorPrazo >= 0 && menorPrazo <= 15);
 
-                    let statusClass = "";
-
-                    let infoPrazo = "";
-
-                    let alerta = "";
-
-
-
-                    // Lógica de Status e Prazo (Quem está em qual fase?)
-
-                    if (d45 >= 0) {
-
-                        statusClass = d45 < 7 ? 'status-red' : d45 <= 15 ? 'status-yellow' : 'status-green';
-
-                        infoPrazo = `Faltam <strong>${d45} dias</strong> p/ o 1º Contrato (45d)`;
-
-                    } else if (d90 >= 0) {
-
-                        statusClass = d90 < 7 ? 'status-red' : d90 <= 15 ? 'status-yellow' : 'status-green';
-
-                        infoPrazo = `Faltam <strong>${d90} dias</strong> p/ o 2º Contrato (90d)`;
-
-                    } else {
-
-                        statusClass = 'status-black';
-
-                        infoPrazo = `<span style="color:red; font-weight:bold;">PRAZO VENCIDO (90 DIAS)</span>`;
-
-                        alerta = '<span class="atencao-icon">⚠️ VENCIDO</span>';
-
-                    }
-
-
-
-                    html += `
-
-                        <div class="card ${statusClass}" onclick="this.classList.toggle('expanded')">
-
-                            <h3><span class="status-dot"></span> ${f.nome} ${alerta}</h3>
-
-                            <div class="card-body">
-
-                                <p><strong>Matrícula:</strong> ${f.matricula} | <strong>Posto:</strong> ${f.posto}</p>
-
-                                <div class="card-info-box">
-
-                                    <p>📅 Início: ${formatBR(f.dataInicio)}</p>
-
-                                    <p>📅 Prazo 45 dias: ${formatBR(f.data45)}</p>
-
-                                    <p>📅 Prazo 90 dias: ${formatBR(f.data90)}</p>
-
-                                    <p style="margin-top:8px; border-top:1px solid #ddd; padding-top:5px;">${infoPrazo}</p>
-
-                                </div>
-
-                                <div class="actions" onclick="event.stopPropagation()">
-
-                                    <button class="btn-small btn-edit" onclick="editar('${f.firebaseId}')">Editar</button>
-
-                                    <button class="btn-small btn-pass" onclick="avaliar('${f.firebaseId}', 'passou')">Aprovar</button>
-
-                                    <button class="btn-small btn-fail" onclick="avaliar('${f.firebaseId}', 'falhou')">Reprovar</button>
-
-                                    <button class="btn-small btn-del" onclick="excluir('${f.firebaseId}')">Excluir</button>
-
-                                </div>
-
-                            </div>
-
-                        </div>`;
-
+                    return matchBusca && matchTurno && matchPrazo;
                 });
 
+                if(filtrados.length === 0) return;
+
+                let html = `<section class="turno-section">
+                                <h2 class="turno-title">${turno} (${filtrados.length})</h2>
+                                <div class="cards-grid">`;
+                
+                filtrados.forEach(f => {
+                    const d45 = calcularDias(f.data45);
+                    const d90 = calcularDias(f.data90);
+                    let statusClass = "", infoPrazo = "", alerta = "";
+
+                    if (d45 >= 0) {
+                        statusClass = d45 < 7 ? 'status-red' : d45 <= 15 ? 'status-yellow' : 'status-green';
+                        infoPrazo = `Faltam <strong>${d45} dias</strong> p/ o 1º Contrato (45d)`;
+                    } else if (d90 >= 0) {
+                        statusClass = d90 < 7 ? 'status-red' : d90 <= 15 ? 'status-yellow' : 'status-green';
+                        infoPrazo = `Faltam <strong>${d90} dias</strong> p/ o 2º Contrato (90d)`;
+                    } else {
+                        statusClass = 'status-black';
+                        infoPrazo = `<span style="color:red; font-weight:bold;">PRAZO VENCIDO (90 DIAS)</span>`;
+                        alerta = '<span class="atencao-icon">⚠️ VENCIDO</span>';
+                    }
+
+                    html += `
+                        <div class="card ${statusClass}" onclick="this.classList.toggle('expanded')">
+                            <h3><span class="status-dot"></span> ${f.nome} ${alerta}</h3>
+                            <div class="card-body">
+                                <p><strong>Matrícula:</strong> ${f.matricula} | <strong>Posto:</strong> ${f.posto}</p>
+                                <div class="card-info-box">
+                                    <p>📅 Início: ${formatBR(f.dataInicio)}</p>
+                                    <p>📅 Prazo 45 dias: ${formatBR(f.data45)}</p>
+                                    <p>📅 Prazo 90 dias: ${formatBR(f.data90)}</p>
+                                    <p style="margin-top:8px; border-top:1px solid #ddd; padding-top:5px;">${infoPrazo}</p>
+                                </div>
+                                <div class="actions" onclick="event.stopPropagation()">
+                                    <button class="btn-small btn-edit" onclick="editar('${f.firebaseId}')">Editar</button>
+                                    <button class="btn-small btn-pass" onclick="avaliar('${f.firebaseId}', 'passou')">Aprovar</button>
+                                    <button class="btn-small btn-fail" onclick="avaliar('${f.firebaseId}', 'falhou')">Reprovar</button>
+                                    <button class="btn-small btn-del" onclick="excluir('${f.firebaseId}')">Excluir</button>
+                                </div>
+                            </div>
+                        </div>`;
+                });
                 container.innerHTML += html + '</div></section>';
-
             });
-
         } else {
-
-            const lista = (currentTab === 'aprovados' ? globalData.aprovados : globalData.reprovados).sort((a,b) => a.nome.localeCompare(b.nome));
-
+            // Abas de Histórico
+            const listaOriginal = (currentTab === 'aprovados' ? globalData.aprovados : globalData.reprovados);
+            const lista = listaOriginal.filter(f => f.nome.toLowerCase().includes(search) || f.matricula.includes(search));
+            
             let table = `<table class="history-table"><thead><tr><th>Nome</th><th>Matrícula</th><th>Turno</th><th>Data</th><th>Avaliador</th></tr></thead><tbody>`;
-
             lista.forEach(f => {
-
                 table += `<tr><td>${f.nome}</td><td>${f.matricula}</td><td>${f.turno}</td><td>${f.dataAvaliacao || '--'}</td><td>${f.avaliadoPor || '--'}</td></tr>`;
-
             });
-
             container.innerHTML = table + `</tbody></table>`;
-
         }
-
         renderStats();
-
     }
 
-
-
     // --- FIREBASE CRUD ---
-
     document.getElementById('btnSalvarFirebase').onclick = async () => {
-
         const id = document.getElementById('editDocId').value;
-
         const dIni = document.getElementById('dataInicio').value;
-
         const nome = document.getElementById('nome').value;
-
         if(!dIni || !nome) return alert("Preencha o Nome e a Data de Início!");
 
-
-
         const d = new Date(dIni + 'T00:00:00');
-
         const f45 = new Date(d); f45.setDate(d.getDate() + 45);
-
         const f90 = new Date(d); f90.setDate(d.getDate() + 90);
 
-
-
         const obj = {
-
             nome,
-
             matricula: document.getElementById('matricula').value,
-
             turno: document.getElementById('turno').value,
-
             posto: document.getElementById('posto').value,
-
             dataInicio: dIni,
-
             data45: f45.toISOString().split('T')[0],
-
             data90: f90.toISOString().split('T')[0],
-
             status: 'ativo',
-
             avaliadoPor: '',
-
             editadoPor: auth.currentUser.email.split('@')[0]
-
         };
 
-
-
         try {
-
             id ? await updateDoc(doc(db, "contratos", id), obj) : await addDoc(collection(db, "contratos"), obj);
-
             toggleForm();
-
         } catch (e) { alert("Erro ao salvar."); }
-
     };
-
-
 
     window.avaliar = async (id, acao) => {
-
         const status = acao === 'passou' ? 'aprovado' : 'reprovado';
-
         await updateDoc(doc(db, "contratos", id), { 
-
             status, 
-
             dataAvaliacao: new Date().toLocaleDateString('pt-BR'),
-
             avaliadoPor: auth.currentUser.email.split('@')[0]
-
         });
-
     };
-
-
 
     window.excluir = async (id) => { if(confirm("Deseja excluir?")) await deleteDoc(doc(db, "contratos", id)); };
 
-
-
     window.editar = (id) => {
-
         const f = [...globalData.funcionarios, ...globalData.aprovados, ...globalData.reprovados].find(i => i.firebaseId === id);
-
         document.getElementById('nome').value = f.nome;
-
         document.getElementById('matricula').value = f.matricula;
-
         document.getElementById('turno').value = f.turno;
-
         document.getElementById('posto').value = f.posto;
-
         document.getElementById('dataInicio').value = f.dataInicio;
-
         document.getElementById('editDocId').value = f.firebaseId;
-
         document.getElementById('formSection').style.display = 'block';
-
+        window.scrollTo(0,0);
     };
-
-
 
     window.toggleForm = () => {
-
         const fs = document.getElementById('formSection');
-
         fs.style.display = fs.style.display === 'block' ? 'none' : 'block';
-
         if(fs.style.display === 'none') document.getElementById('editDocId').value = '';
-
     };
-
-
 
     function renderStats() {
-
         document.getElementById('statsBar').innerHTML = `
-
             <div class="stat-card"><strong>Ativos</strong><br>${globalData.funcionarios.length}</div>
-
             <div class="stat-card"><strong>Aprovados</strong><br>${globalData.aprovados.length}</div>
-
             <div class="stat-card"><strong>Reprovados</strong><br>${globalData.reprovados.length}</div>`;
-
     }
-
-
-
-    // --- TAB NAVIGATION ---
 
     document.getElementById('tabAtivosBtn').onclick = (e) => { currentTab = 'ativos'; updateTabs(e.target); };
-
     document.getElementById('tabAprovadosBtn').onclick = (e) => { currentTab = 'aprovados'; updateTabs(e.target); };
-
     document.getElementById('tabReprovadosBtn').onclick = (e) => { currentTab = 'reprovados'; updateTabs(e.target); };
-
+    
     function updateTabs(btn) {
-
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
         btn.classList.add('active');
-
         renderizarTudo();
-
     }
 
-
-
-    // --- PDF COM DETALHAMENTO DE DIAS ---
-
     document.getElementById('btnGerarPDF').onclick = () => {
-
         const { jsPDF } = window.jspdf;
-
         const docPDF = new jsPDF('l', 'mm', 'a4');
-
-        
-
         const ativos = globalData.funcionarios.sort((a,b) => {
-
             if(a.turno !== b.turno) return a.turno.localeCompare(b.turno);
-
             return a.nome.localeCompare(b.nome);
-
         });
 
+        const rows = ativos.map(f => [
+            f.nome, f.matricula, f.turno, formatBR(f.dataInicio),
+            `${formatBR(f.data45)} (${calcularDias(f.data45)}d)`,
+            `${formatBR(f.data90)} (${calcularDias(f.data90)}d)`,
+            f.posto
+        ]);
 
-
-        const rows = ativos.map(f => {
-
-            const d45 = calcularDias(f.data45);
-
-            const d90 = calcularDias(f.data90);
-
-            return [
-
-                f.nome, f.matricula, f.turno, formatBR(f.dataInicio),
-
-                `${formatBR(f.data45)}\n(${d45 < 0 ? 'Concluído' : 'Faltam ' + d45 + 'd'})`,
-
-                `${formatBR(f.data90)}\n(${d90 < 0 ? 'VENCIDO' : 'Faltam ' + d90 + 'd'})`,
-
-                f.posto
-
-            ];
-
-        });
-
-
-
-        docPDF.setFontSize(16);
-
-        docPDF.text("CONTROLE DE CONTRATOS 45/90 DIAS - QUÂNTICA", 14, 15);
-
-        docPDF.setFontSize(10);
-
-        docPDF.text(`Relatório emitido em: ${new Date().toLocaleString('pt-BR')}`, 14, 22);
-
-
-
+        docPDF.text("CONTROLE DE CONTRATOS - QUÂNTICA", 14, 15);
         docPDF.autoTable({
-
             head: [['Funcionário', 'Mat.', 'Turno', 'Início', 'Prazo 45d', 'Prazo 90d', 'Posto']],
-
             body: rows,
-
-            startY: 28,
-
-            theme: 'grid',
-
-            headStyles: { fillColor: [44, 62, 80] },
-
-            didParseCell: function(data) {
-
-                if (data.section === 'body' && data.column.index === 5 && data.cell.raw.includes('VENCIDO')) {
-
-                    data.cell.styles.textColor = [231, 76, 60];
-
-                }
-
-            }
-
+            startY: 25,
+            theme: 'grid'
         });
-
-        docPDF.save(`Auditoria_Contratos_${new Date().toLocaleDateString('pt-BR')}.pdf`);
-
+        docPDF.save(`Relatorio_Contratos.pdf`);
     };
-
 </script>
 
 </body>
-
 </html>
